@@ -10,6 +10,7 @@ First install nnj (https://github.com/frederikwarburg/nnj)
 pip install -e .
 ```
 
+
 ## Methods
 
 ### Laplace of neural network
