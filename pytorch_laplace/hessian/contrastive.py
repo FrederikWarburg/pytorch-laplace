@@ -40,7 +40,7 @@ def _arccos_hessian(z1, z2):
 
 class ContrastiveHessianCalculator(HessianCalculator):
     """
-    Contrastive Loss 
+    Contrastive Loss
 
     L(x,y) = 0.5 * || x - y ||
     Contrastive(x, tuples) = sum_positives L(x,y) - sum_negatives L(x,y)
@@ -50,13 +50,13 @@ class ContrastiveHessianCalculator(HessianCalculator):
     and
         self.method == "fix"
     """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         assert self.method in ("full", "fix", "pos")
 
     def compute_loss(self, x, target, nnj_module, tuple_indices):
-
         # unpack tuple indices
         if len(tuple_indices) == 3:
             a, p, n = tuple_indices
@@ -86,7 +86,6 @@ class ContrastiveHessianCalculator(HessianCalculator):
         raise NotImplementedError
 
     def compute_hessian(self, x, nnj_module, tuple_indices):
-
         with torch.no_grad():
             # unpack tuple indices
             if len(tuple_indices) == 3:
@@ -97,7 +96,6 @@ class ContrastiveHessianCalculator(HessianCalculator):
             assert len(ap) == len(p) and len(an) == len(n)
 
             if self.method == "full" or self.method == "pos":
-
                 # compute positive part
                 pos = nnj_module._jTmjp_batch2(
                     x[ap],
@@ -140,7 +138,6 @@ class ContrastiveHessianCalculator(HessianCalculator):
                 return pos - neg
 
             if self.method == "fix":
-
                 positives = x[p] if len(tuple_indices) == 3 else torch.cat((x[ap], x[p]))
                 negatives = x[n] if len(tuple_indices) == 3 else torch.cat((x[an], x[n]))
 
@@ -183,6 +180,7 @@ class ArccosHessianCalculator(HessianCalculator):
     and
         self.method == "fix"
     """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -224,7 +222,6 @@ class ArccosHessianCalculator(HessianCalculator):
         raise NotImplementedError
 
     def compute_hessian(self, x, nnj_module, tuple_indices):
-
         with torch.no_grad():
             # unpack tuple indices
             if len(tuple_indices) == 3:
@@ -235,7 +232,6 @@ class ArccosHessianCalculator(HessianCalculator):
             assert len(ap) == len(p) and len(an) == len(n)
 
             if self.method == "full" or self.method == "pos":
-
                 ###
                 # compute positive part
                 ###
@@ -300,7 +296,6 @@ class ArccosHessianCalculator(HessianCalculator):
                 return pos - neg
 
             if self.method == "fix":
-
                 ### compute positive part ###
 
                 # forward pass

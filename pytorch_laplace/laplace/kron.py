@@ -25,7 +25,6 @@ class BlockLaplace(BaseLaplace):
         return param_samples
 
     def posterior_scale(self, hessian, scale=1, prior_prec=1):
-
         posterior_precision = [
             h * scale + torch.diag_embed(prior_prec * torch.ones(h.shape[0])) for h in hessian
         ]
@@ -33,7 +32,6 @@ class BlockLaplace(BaseLaplace):
         return posterior_scale
 
     def init_hessian(self, data_size, net, device):
-
         hessian = []
         for layer in net:
             # if parametric layer

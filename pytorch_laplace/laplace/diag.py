@@ -12,12 +12,10 @@ class DiagLaplace(BaseLaplace):
         return parameters.view(1, n_params) + samples
 
     def posterior_scale(self, hessian, scale=1, prior_prec=1):
-
         posterior_precision = hessian * scale + prior_prec
         return 1.0 / (posterior_precision.sqrt() + 1e-6)
 
     def init_hessian(self, data_size, net, device):
-
         hessian = data_size * torch.ones_like(parameters_to_vector(net.parameters()), device=device)
         return hessian
 
@@ -25,7 +23,6 @@ class DiagLaplace(BaseLaplace):
         return h_s / b * data_size
 
     def average_hessian_samples(self, hessian, constant):
-
         # average over samples
         hessian = torch.stack(hessian).mean(dim=0) if len(hessian) > 1 else hessian[0]
 

@@ -3,14 +3,14 @@ from pytorch_laplace.hessian.base import HessianCalculator
 
 
 class BCEHessianCalculator(HessianCalculator):
-    " Binary Cross Entropy "
+    "Binary Cross Entropy"
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         assert self.method == ""
 
     def compute_loss(self, x, target, nnj_module, tuple_indices=None):
-
         with torch.no_grad():
             val = nnj_module(x)
             assert val.shape == target.shape
@@ -25,7 +25,6 @@ class BCEHessianCalculator(HessianCalculator):
             return cross_entropy
 
     def compute_gradient(self, x, target, nnj_module, tuple_indices=None):
-        
         with torch.no_grad():
             val = nnj_module(x)
             assert val.shape == target.shape
@@ -42,13 +41,12 @@ class BCEHessianCalculator(HessianCalculator):
             return gradient
 
     def compute_hessian(self, x, nnj_module, tuple_indices=None):
-
         with torch.no_grad():
             val = nnj_module(x)
 
             bernoulli_p = torch.exp(val) / (1 + torch.exp(val))
-            H = bernoulli_p - bernoulli_p**2  
-            H = H.reshape(val.shape[0], -1) # hessian in diagonal form
+            H = bernoulli_p - bernoulli_p**2
+            H = H.reshape(val.shape[0], -1)  # hessian in diagonal form
 
             # backpropagate through the network
             Jt_H_J = nnj_module._jTmjp(

@@ -3,14 +3,14 @@ from pytorch_laplace.hessian.base import HessianCalculator
 
 
 class MSEHessianCalculator(HessianCalculator):
-    " Mean Square Error "
+    "Mean Square Error"
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         assert self.method == ""
-    
-    def compute_loss(self, x, target, nnj_module, tuple_indices=None):
 
+    def compute_loss(self, x, target, nnj_module, tuple_indices=None):
         with torch.no_grad():
             val = nnj_module(x)
             assert val.shape == target.shape
@@ -27,7 +27,6 @@ class MSEHessianCalculator(HessianCalculator):
             return mse
 
     def compute_gradient(self, x, target, nnj_module, tuple_indices=None):
-
         with torch.no_grad():
             val = nnj_module(x)
             assert val.shape == target.shape
@@ -44,7 +43,6 @@ class MSEHessianCalculator(HessianCalculator):
             return gradient
 
     def compute_hessian(self, x, nnj_module, tuple_indices=None):
-
         # compute Jacobian sandwich of the identity for each element in the batch
         # H = identity matrix (None is interpreted as identity by jTmjp)
 
