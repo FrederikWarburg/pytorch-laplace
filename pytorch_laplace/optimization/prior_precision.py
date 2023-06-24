@@ -1,5 +1,6 @@
-import torch
 from abc import abstractmethod
+
+import torch
 from torch.nn.utils import parameters_to_vector
 
 

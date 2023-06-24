@@ -1,4 +1,5 @@
 import torch
+
 from pytorch_laplace.hessian.base import HessianCalculator
 
 

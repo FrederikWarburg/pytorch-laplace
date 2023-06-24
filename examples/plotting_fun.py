@@ -1,11 +1,10 @@
-import torch
-from torch.nn.utils import vector_to_parameters, parameters_to_vector
-import numpy as np
-
-import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 from matplotlib.patches import Ellipse
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from torch.nn.utils import parameters_to_vector, vector_to_parameters
 
 from pytorch_laplace.laplace.diag import DiagLaplace
 
