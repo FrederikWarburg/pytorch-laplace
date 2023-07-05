@@ -1,17 +1,16 @@
-from abc import ABC, abstractmethod
-from typing import Optional, Tuple
+from abc import ABC
+from typing import Literal
 
-import torch
 from torch import nn
 
 
 class HessianCalculator(ABC, nn.Module):
     def __init__(
         self,
-        wrt="weight",
-        shape="diagonal",
-        speed="half",
-        method="",
+        wrt: Literal = "weight",
+        shape: Literal = "diagonal",
+        speed: Literal = "half",
+        method: Literal = "",
     ) -> None:
         super().__init__()
 
