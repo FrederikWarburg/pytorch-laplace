@@ -7,10 +7,10 @@ from torch import nn
 class HessianCalculator(ABC, nn.Module):
     def __init__(
         self,
-        wrt: Literal = "weight",
-        shape: Literal = "diagonal",
-        speed: Literal = "half",
-        method: Literal = "",
+        wrt: Literal["input", "weight"] = "weight",
+        shape: Literal["full", "block", "diagonal"] = "diagonal",
+        speed: Literal["slow", "half", "fast"] = "half",
+        method: Literal["", "full", "pos", "fix"] = "",
     ) -> None:
         super().__init__()
 
