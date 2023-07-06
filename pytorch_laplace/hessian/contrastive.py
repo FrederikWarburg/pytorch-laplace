@@ -57,6 +57,7 @@ class ContrastiveHessianCalculator(HessianCalculator):
 
         assert self.method in ("full", "fix", "pos")
 
+    @torch.no_grad()
     def compute_loss(self, x, target, nnj_module, tuple_indices):
         # unpack tuple indices
         if len(tuple_indices) == 3:
@@ -83,90 +84,91 @@ class ContrastiveHessianCalculator(HessianCalculator):
 
         return pos - neg
 
+    @torch.no_grad()
     def compute_gradient(self, x, target, nnj_module, tuple_indices):
         raise NotImplementedError
 
+    @torch.no_grad()
     def compute_hessian(self, x, nnj_module, tuple_indices):
-        with torch.no_grad():
-            # unpack tuple indices
-            if len(tuple_indices) == 3:
-                a, p, n = tuple_indices
-                ap = an = a
+        # unpack tuple indices
+        if len(tuple_indices) == 3:
+            a, p, n = tuple_indices
+            ap = an = a
+        else:
+            ap, p, an, n = tuple_indices
+        assert len(ap) == len(p) and len(an) == len(n)
+
+        if self.method == "full" or self.method == "pos":
+            # compute positive part
+            pos = nnj_module._jTmjp_batch2(
+                x[ap],
+                x[p],
+                None,
+                None,
+                None,
+                wrt=self.wrt,
+                to_diag=self.shape == "diagonal",
+                diag_backprop=self.speed == "fast",
+            )
+            if self.shape == "diagonal":
+                pos = pos[0] - 2 * pos[1] + pos[2]
             else:
-                ap, p, an, n = tuple_indices
-            assert len(ap) == len(p) and len(an) == len(n)
+                raise NotImplementedError
+            # sum along batch size
+            pos = torch.sum(pos, dim=0)
 
-            if self.method == "full" or self.method == "pos":
-                # compute positive part
-                pos = nnj_module._jTmjp_batch2(
-                    x[ap],
-                    x[p],
-                    None,
-                    None,
-                    None,
-                    wrt=self.wrt,
-                    to_diag=self.shape == "diagonal",
-                    diag_backprop=self.speed == "fast",
-                )
-                if self.shape == "diagonal":
-                    pos = pos[0] - 2 * pos[1] + pos[2]
-                else:
-                    raise NotImplementedError
-                # sum along batch size
-                pos = torch.sum(pos, dim=0)
+            if self.method == "pos":
+                return pos
 
-                if self.method == "pos":
-                    return pos
+            # compute negative part
+            neg = nnj_module._jTmjp_batch2(
+                x[an],
+                x[n],
+                None,
+                None,
+                None,
+                wrt=self.wrt,
+                to_diag=self.shape == "diagonal",
+                diag_backprop=self.speed == "fast",
+            )
+            if self.shape == "diagonal":
+                neg = neg[0] - 2 * neg[1] + neg[2]
+            else:
+                raise NotImplementedError
+            # sum along batch size
+            neg = torch.sum(neg, dim=0)
 
-                # compute negative part
-                neg = nnj_module._jTmjp_batch2(
-                    x[an],
-                    x[n],
-                    None,
-                    None,
-                    None,
-                    wrt=self.wrt,
-                    to_diag=self.shape == "diagonal",
-                    diag_backprop=self.speed == "fast",
-                )
-                if self.shape == "diagonal":
-                    neg = neg[0] - 2 * neg[1] + neg[2]
-                else:
-                    raise NotImplementedError
-                # sum along batch size
-                neg = torch.sum(neg, dim=0)
+            return pos - neg
 
-                return pos - neg
+        if self.method == "fix":
+            positives = x[p] if len(tuple_indices) == 3 else torch.cat((x[ap], x[p]))
+            negatives = x[n] if len(tuple_indices) == 3 else torch.cat((x[an], x[n]))
 
-            if self.method == "fix":
-                positives = x[p] if len(tuple_indices) == 3 else torch.cat((x[ap], x[p]))
-                negatives = x[n] if len(tuple_indices) == 3 else torch.cat((x[an], x[n]))
+            # compute positive part
+            pos = nnj_module._jTmjp(
+                positives,
+                None,
+                None,
+                wrt=self.wrt,
+                to_diag=self.shape == "diagonal",
+                diag_backprop=self.speed == "fast",
+            )
+            # sum along batch size
+            pos = torch.sum(pos, dim=0)
 
-                # compute positive part
-                pos = nnj_module._jTmjp(
-                    positives,
-                    None,
-                    None,
-                    wrt=self.wrt,
-                    to_diag=self.shape == "diagonal",
-                    diag_backprop=self.speed == "fast",
-                )
-                # sum along batch size
-                pos = torch.sum(pos, dim=0)
+            # compute negative part
+            neg = nnj_module._jTmjp(
+                negatives,
+                None,
+                None,
+                wrt=self.wrt,
+                to_diag=self.shape == "diagonal",
+                diag_backprop=self.speed == "fast",
+            )
+            # sum along batch size
+            neg = torch.sum(neg, dim=0)
 
-                # compute negative part
-                neg = nnj_module._jTmjp(
-                    negatives,
-                    None,
-                    None,
-                    wrt=self.wrt,
-                    to_diag=self.shape == "diagonal",
-                    diag_backprop=self.speed == "fast",
-                )
-                # sum along batch size
-                neg = torch.sum(neg, dim=0)
-
-                return pos - neg
+            return pos - neg
 
 
 class ArccosHessianCalculator(HessianCalculator):
@@ -187,6 +189,7 @@ class ArccosHessianCalculator(HessianCalculator):
 
         assert self.method in ("full", "fix", "pos")
 
+    @torch.no_grad()
     def compute_loss(self, x, nnj_module, tuple_indices):
         """
         L(x,y) = 0.5 * sum_i x_i * y_i
@@ -219,141 +222,142 @@ class ArccosHessianCalculator(HessianCalculator):
 
         return pos - neg
 
+    @torch.no_grad()
     def compute_gradient(self, x, target, nnj_module, tuple_indices):
         raise NotImplementedError
 
+    @torch.no_grad()
     def compute_hessian(self, x, nnj_module, tuple_indices):
-        with torch.no_grad():
-            # unpack tuple indices
-            if len(tuple_indices) == 3:
-                a, p, n = tuple_indices
-                ap = an = a
+        # unpack tuple indices
+        if len(tuple_indices) == 3:
+            a, p, n = tuple_indices
+            ap = an = a
+        else:
+            ap, p, an, n = tuple_indices
+        assert len(ap) == len(p) and len(an) == len(n)
+
+        if self.method == "full" or self.method == "pos":
+            ###
+            # compute positive part
+            ###
+
+            # forward pass
+            z1, z2 = nnj_module(x[ap]), nnj_module(x[p])
+
+            # initialize the hessian of the loss
+            H = _arccos_hessian(z1, z2)
+
+            # backpropagate through the network
+            pos = nnj_module._jTmjp_batch2(
+                x[ap],
+                x[p],
+                z1,
+                z2,
+                H,
+                wrt=self.wrt,
+                to_diag=self.shape == "diagonal",
+                from_diag=False,
+                diag_backprop=self.speed == "fast",
+            )
+            if self.shape == "diagonal":
+                pos = pos[0] - 2 * pos[1] + pos[2]
             else:
-                ap, p, an, n = tuple_indices
-            assert len(ap) == len(p) and len(an) == len(n)
+                raise NotImplementedError
+            # sum along batch size
+            pos = torch.sum(pos, dim=0)
 
-            if self.method == "full" or self.method == "pos":
-                ###
-                # compute positive part
-                ###
+            if self.method == "pos":
+                return pos
 
-                # forward pass
-                z1, z2 = nnj_module(x[ap]), nnj_module(x[p])
+            ###
+            # compute negative part
+            ###
 
-                # initialize the hessian of the loss
-                H = _arccos_hessian(z1, z2)
+            # forward pass
+            z1, z2 = nnj_module(x[an]), nnj_module(x[n])
 
-                # backpropagate through the network
-                pos = nnj_module._jTmjp_batch2(
-                    x[ap],
-                    x[p],
-                    z1,
-                    z2,
-                    H,
-                    wrt=self.wrt,
-                    to_diag=self.shape == "diagonal",
-                    from_diag=False,
-                    diag_backprop=self.speed == "fast",
-                )
-                if self.shape == "diagonal":
-                    pos = pos[0] - 2 * pos[1] + pos[2]
-                else:
-                    raise NotImplementedError
-                # sum along batch size
-                pos = torch.sum(pos, dim=0)
+            # initialize the hessian of the loss
+            H = _arccos_hessian(z1, z2)
 
-                if self.method == "pos":
-                    return pos
+            # backpropagate through the network
+            neg = nnj_module._jTmjp_batch2(
+                x[an],
+                x[n],
+                z1,
+                z2,
+                H,
+                wrt=self.wrt,
+                to_diag=self.shape == "diagonal",
+                from_diag=False,
+                diag_backprop=self.speed == "fast",
+            )
+            if self.shape == "diagonal":
+                neg = neg[0] - 2 * neg[1] + neg[2]
+            else:
+                raise NotImplementedError
+            # sum along batch size
+            neg = torch.sum(neg, dim=0)
 
-                ###
-                # compute negative part
-                ###
+            return pos - neg
 
-                # forward pass
-                z1, z2 = nnj_module(x[an]), nnj_module(x[n])
+        if self.method == "fix":
+            ### compute positive part ###
 
-                # initialize the hessian of the loss
-                H = _arccos_hessian(z1, z2)
+            # forward pass
+            z1, z2 = nnj_module(x[ap]), nnj_module(x[p])
 
-                # backpropagate through the network
-                neg = nnj_module._jTmjp_batch2(
-                    x[an],
-                    x[n],
-                    z1,
-                    z2,
-                    H,
-                    wrt=self.wrt,
-                    to_diag=self.shape == "diagonal",
-                    from_diag=False,
-                    diag_backprop=self.speed == "fast",
-                )
-                if self.shape == "diagonal":
-                    neg = neg[0] - 2 * neg[1] + neg[2]
-                else:
-                    raise NotImplementedError
-                # sum along batch size
-                neg = torch.sum(neg, dim=0)
+            # initialize the hessian of the loss
+            H1, _, H2 = _arccos_hessian(z1, z2)
 
-                return pos - neg
+            # backpropagate through the network
+            pos1 = nnj_module._jTmjp(
+                x[ap],
+                None,
+                H1,
+                wrt=self.wrt,
+                to_diag=self.shape == "diagonal",
+                diag_backprop=self.speed == "fast",
+            )
+            pos2 = nnj_module._jTmjp(
+                x[p],
+                None,
+                H2,
+                wrt=self.wrt,
+                to_diag=self.shape == "diagonal",
+                diag_backprop=self.speed == "fast",
+            )
+            pos = pos1 + pos2
 
-            if self.method == "fix":
-                ### compute positive part ###
+            # sum along batch size
+            pos = torch.sum(pos, dim=0)
 
-                # forward pass
-                z1, z2 = nnj_module(x[ap]), nnj_module(x[p])
+            ### compute negative part ###
+            # forward pass
+            z1, z2 = nnj_module(x[an]), nnj_module(x[n])
 
-                # initialize the hessian of the loss
-                H1, _, H2 = _arccos_hessian(z1, z2)
+            # initialize the hessian of the loss
+            H1, _, H2 = _arccos_hessian(z1, z2)
 
-                # backpropagate through the network
-                pos1 = nnj_module._jTmjp(
-                    x[ap],
-                    None,
-                    H1,
-                    wrt=self.wrt,
-                    to_diag=self.shape == "diagonal",
-                    diag_backprop=self.speed == "fast",
-                )
-                pos2 = nnj_module._jTmjp(
-                    x[p],
-                    None,
-                    H2,
-                    wrt=self.wrt,
-                    to_diag=self.shape == "diagonal",
-                    diag_backprop=self.speed == "fast",
-                )
-                pos = pos1 + pos2
+            # backpropagate through the network
+            neg1 = nnj_module._jTmjp(
+                x[an],
+                None,
+                H1,
+                wrt=self.wrt,
+                to_diag=self.shape == "diagonal",
+                diag_backprop=self.speed == "fast",
+            )
+            neg2 = nnj_module._jTmjp(
+                x[n],
+                None,
+                H2,
+                wrt=self.wrt,
+                to_diag=self.shape == "diagonal",
+                diag_backprop=self.speed == "fast",
+            )
+            neg = neg1 + neg2
 
-                # sum along batch size
-                pos = torch.sum(pos, dim=0)
+            # sum along batch size
+            neg = torch.sum(neg, dim=0)
 
-                ### compute negative part ###
-                # forward pass
-                z1, z2 = nnj_module(x[an]), nnj_module(x[n])
-
-                # initialize the hessian of the loss
-                H1, _, H2 = _arccos_hessian(z1, z2)
-
-                # backpropagate through the network
-                neg1 = nnj_module._jTmjp(
-                    x[an],
-                    None,
-                    H1,
-                    wrt=self.wrt,
-                    to_diag=self.shape == "diagonal",
-                    diag_backprop=self.speed == "fast",
-                )
-                neg2 = nnj_module._jTmjp(
-                    x[n],
-                    None,
-                    H2,
-                    wrt=self.wrt,
-                    to_diag=self.shape == "diagonal",
-                    diag_backprop=self.speed == "fast",
-                )
-                neg = neg1 + neg2
-
-                # sum along batch size
-                neg = torch.sum(neg, dim=0)
-
-                return pos - neg
+            return pos - neg

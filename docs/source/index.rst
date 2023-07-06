@@ -5,6 +5,7 @@ Pytorch-laplace provides a simple API for Laplace approximation in PyTorch. With
 It supports both Laplace and Linearized Laplace. It focuses on diagonal hessian approximations, but also supports low-rank hessian approximations such as the kronicker factorization.
 
 Github: https://github.com/FrederikWarburg/pytorch-laplace
+
 Authors: Frederik Warburg and Marco Miani
 
 Installation
@@ -31,7 +32,7 @@ Usage
 
 
 .. code-block:: python
-   
+
    import torch.nn as nn
    import nnj
 

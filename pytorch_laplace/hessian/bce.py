@@ -14,6 +14,7 @@ class BCEHessianCalculator(HessianCalculator):
 
         assert self.method == ""
 
+    @torch.no_grad()
     def compute_loss(
         self,
         x: torch.Tensor,
@@ -25,19 +26,19 @@ class BCEHessianCalculator(HessianCalculator):
         Computes Binary Cross Entropy
         """
 
-        with torch.no_grad():
-            val = nnj_module(x)
-            assert val.shape == target.shape
+        val = nnj_module(x)
+        assert val.shape == target.shape
 
-            bernoulli_p = torch.exp(val) / (1 + torch.exp(val))
-            cross_entropy = -(target * torch.log(bernoulli_p) + (1 - target) * torch.log(1 - bernoulli_p))
+        bernoulli_p = torch.exp(val) / (1 + torch.exp(val))
+        cross_entropy = -(target * torch.log(bernoulli_p) + (1 - target) * torch.log(1 - bernoulli_p))
 
-            # average along batch size
-            cross_entropy = torch.mean(cross_entropy, dim=0)
-            # sum along other dimensions
-            cross_entropy = torch.sum(cross_entropy)
-            return cross_entropy
+        # average along batch size
+        cross_entropy = torch.mean(cross_entropy, dim=0)
+        # sum along other dimensions
+        cross_entropy = torch.sum(cross_entropy)
+        return cross_entropy
 
+    @torch.no_grad()
     def compute_gradient(
         self,
         x: torch.Tensor,
@@ -49,45 +50,47 @@ class BCEHessianCalculator(HessianCalculator):
         Computes gradient of the network
         """
 
-        with torch.no_grad():
-            val = nnj_module(x)
-            assert val.shape == target.shape
+        val = nnj_module(x)
+        assert val.shape == target.shape
 
-            bernoulli_p = torch.exp(val) / (1 + torch.exp(val))
-            gradient = bernoulli_p - target
+        bernoulli_p = torch.exp(val) / (1 + torch.exp(val))
+        gradient = bernoulli_p - target
 
-            # backpropagate through the network
-            gradient = gradient.reshape(val.shape[0], -1)
-            gradient = nnj_module._vjp(x, val, gradient, wrt=self.wrt)
+        # backpropagate through the network
+        gradient = gradient.reshape(val.shape[0], -1)
+        gradient = nnj_module._vjp(x, val, gradient, wrt=self.wrt)
 
-            # average along batch size
-            gradient = torch.mean(gradient, dim=0)
-            return gradient
+        # average along batch size
+        gradient = torch.mean(gradient, dim=0)
+        return gradient
 
+    @torch.no_grad()
     def compute_hessian(
-        self, x: torch.Tensor, nnj_module: nnj.Sequential, tuple_indices: Optional[tuple] = None
+        self,
+        x: torch.Tensor,
+        nnj_module: nnj.Sequential,
+        tuple_indices: Optional[tuple] = None,
     ) -> torch.Tensor:
         """
         Computes Generalized Gauss-Newton approximation (J^T H J) of the hessian of the network
         """
 
-        with torch.no_grad():
-            val = nnj_module(x)
+        val = nnj_module(x)
 
-            bernoulli_p = torch.exp(val) / (1 + torch.exp(val))
-            H = bernoulli_p - bernoulli_p**2
-            H = H.reshape(val.shape[0], -1)  # hessian in diagonal form
+        bernoulli_p = torch.exp(val) / (1 + torch.exp(val))
+        H = bernoulli_p - bernoulli_p**2
+        H = H.reshape(val.shape[0], -1)  # hessian in diagonal form
 
-            # backpropagate through the network
-            Jt_H_J = nnj_module.jTmjp(
-                x,
-                val,
-                H,
-                wrt=self.wrt,
-                from_diag=True,
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
-            )
-            # average along batch size
-            Jt_H_J = torch.mean(Jt_H_J, dim=0)
-            return Jt_H_J
+        # backpropagate through the network
+        Jt_H_J = nnj_module.jTmjp(
+            x,
+            val,
+            H,
+            wrt=self.wrt,
+            from_diag=True,
+            to_diag=self.shape == "diagonal",
+            diag_backprop=self.speed == "fast",
+        )
+        # average along batch size
+        Jt_H_J = torch.mean(Jt_H_J, dim=0)
+        return Jt_H_J

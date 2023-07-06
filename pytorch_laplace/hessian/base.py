@@ -1,6 +1,7 @@
 from abc import ABC
 from typing import Literal
 
+import torch
 from torch import nn
 
 
@@ -27,11 +28,14 @@ class HessianCalculator(ABC, nn.Module):
             # second order
             raise NotImplementedError
 
+    @torch.no_grad()
     def compute_loss(self, x, target, nnj_module, tuple_indices=None):
         raise NotImplementedError
 
+    @torch.no_grad()
     def compute_gradient(self, x, target, nnj_module, tuple_indices=None):
         raise NotImplementedError
 
+    @torch.no_grad()
     def compute_hessian(self, x, nnj_module, tuple_indices=None):
         raise NotImplementedError
