@@ -233,6 +233,62 @@
 <dt class="sig sig-object py" id="pytorch_laplace.BCEHessianCalculator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pytorch_laplace.</span></span><span class="sig-name descname"><span class="pre">BCEHessianCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.BCEHessianCalculator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Binary Cross Entropy</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.BCEHessianCalculator.compute_gradient">
+<span class="sig-name descname"><span class="pre">compute_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nnj_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuple_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.BCEHessianCalculator.compute_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes gradient of the network</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Tensor</em>) – </p></li>
+<li><p><strong>target</strong> (<em>Tensor</em>) – </p></li>
+<li><p><strong>nnj_module</strong> (<em>Sequential</em>) – </p></li>
+<li><p><strong>tuple_indices</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.11)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.BCEHessianCalculator.compute_hessian">
+<span class="sig-name descname"><span class="pre">compute_hessian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nnj_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuple_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.BCEHessianCalculator.compute_hessian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes Generalized Gauss-Newton approximation (J^T H J) of the hessian of the network</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Tensor</em>) – </p></li>
+<li><p><strong>nnj_module</strong> (<em>Sequential</em>) – </p></li>
+<li><p><strong>tuple_indices</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.11)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.BCEHessianCalculator.compute_loss">
+<span class="sig-name descname"><span class="pre">compute_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nnj_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuple_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.BCEHessianCalculator.compute_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes Binary Cross Entropy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Tensor</em>) – </p></li>
+<li><p><strong>target</strong> (<em>Tensor</em>) – </p></li>
+<li><p><strong>nnj_module</strong> (<em>Sequential</em>) – </p></li>
+<li><p><strong>tuple_indices</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.11)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -297,7 +353,12 @@ Contrastive(x, tuples) = sum_positives L(x,y) - sum_negatives L(x,y)</p>
 <li><a class="reference internal" href="#">Hessian Estimators</a><ul>
 <li><a class="reference internal" href="#pytorch_laplace.MSEHessianCalculator"><code class="docutils literal notranslate"><span class="pre">MSEHessianCalculator</span></code></a></li>
 <li><a class="reference internal" href="#pytorch_laplace.CEHessianCalculator"><code class="docutils literal notranslate"><span class="pre">CEHessianCalculator</span></code></a></li>
-<li><a class="reference internal" href="#pytorch_laplace.BCEHessianCalculator"><code class="docutils literal notranslate"><span class="pre">BCEHessianCalculator</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.BCEHessianCalculator"><code class="docutils literal notranslate"><span class="pre">BCEHessianCalculator</span></code></a><ul>
+<li><a class="reference internal" href="#pytorch_laplace.BCEHessianCalculator.compute_gradient"><code class="docutils literal notranslate"><span class="pre">BCEHessianCalculator.compute_gradient()</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.BCEHessianCalculator.compute_hessian"><code class="docutils literal notranslate"><span class="pre">BCEHessianCalculator.compute_hessian()</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.BCEHessianCalculator.compute_loss"><code class="docutils literal notranslate"><span class="pre">BCEHessianCalculator.compute_loss()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#pytorch_laplace.ContrastiveHessianCalculator"><code class="docutils literal notranslate"><span class="pre">ContrastiveHessianCalculator</span></code></a></li>
 </ul>
 </li>

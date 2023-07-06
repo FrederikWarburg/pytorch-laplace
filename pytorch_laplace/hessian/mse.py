@@ -37,7 +37,7 @@ class MSEHessianCalculator(HessianCalculator):
 
             # backpropagate through the network
             gradient = gradient.reshape(val.shape[0], -1)
-            gradient = nnj_module._vjp(x, val, gradient, wrt=self.wrt)
+            gradient = nnj_module.vjp(x, val, gradient, wrt=self.wrt)
 
             # average along batch size
             gradient = torch.mean(gradient, dim=0)
@@ -51,7 +51,7 @@ class MSEHessianCalculator(HessianCalculator):
             val = nnj_module(x)
 
             # backpropagate through the network
-            Jt_J = nnj_module._jTmjp(
+            Jt_J = nnj_module.jTmjp(
                 x,
                 val,
                 None,

@@ -216,6 +216,55 @@
                 
   <section id="pytorch-laplace-documentation">
 <h1>Pytorch-laplace Documentation<a class="headerlink" href="#pytorch-laplace-documentation" title="Permalink to this heading">¶</a></h1>
+<p>Pytorch-laplace provides a simple API for Laplace approximation in PyTorch. With minimal code changes, you can use it to approximate the posterior of any PyTorch model.
+It supports both Laplace and Linearized Laplace. It focuses on diagonal hessian approximations, but also supports low-rank hessian approximations such as the kronicker factorization.</p>
+<p>Github: <a class="reference external" href="https://github.com/FrederikWarburg/pytorch-laplace">https://github.com/FrederikWarburg/pytorch-laplace</a>
+Authors: Frederik Warburg and Marco Miani</p>
+</section>
+<section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
+<p><strong>Dependence</strong>: Please install Pytorch first.</p>
+<p>The easiest way is to install from PyPI:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>pytorch-laplace
+</pre></div>
+</div>
+<p>Or install from source:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/FrederikWarburg/pytorch-laplace
+<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>pytorch-laplace
+<span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
+<section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">¶</a></h1>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">nnj</span>
+
+<span class="c1"># Import the laplace approximation</span>
+<span class="kn">from</span> <span class="nn">pytorch_laplace</span> <span class="kn">import</span> <span class="n">MSEHessianCalculator</span>
+<span class="kn">from</span> <span class="nn">pytorch_laplace.laplace.diag</span> <span class="kn">import</span> <span class="n">DiagLaplace</span>
+<span class="kn">from</span> <span class="nn">pytorch_laplace.optimization.prior_precision</span> <span class="kn">import</span> <span class="n">optimize_prior_precision</span>
+
+<span class="c1"># Define you sequential model</span>
+<span class="n">network_nn</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+   <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span>
+   <span class="n">nn</span><span class="o">.</span><span class="n">Tanh</span><span class="p">(),</span>
+   <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(),</span>
+<span class="p">)</span>
+
+<span class="c1"># convert to nnj</span>
+<span class="n">network_nnj</span> <span class="o">=</span> <span class="n">nnj</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">convert_to_nnj</span><span class="p">(</span>
+   <span class="n">network_nn</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># fit hessian</span>
+<span class="n">hessian</span> <span class="o">=</span> <span class="n">fit_hessian</span><span class="p">(</span><span class="n">network_nnj</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+
+<span class="c1"># sample from the posterior</span>
+<span class="n">pred_mu</span><span class="p">,</span> <span class="n">pred_sigma</span> <span class="o">=</span> <span class="n">sample_laplace</span><span class="p">(</span><span class="n">network_nnj</span><span class="p">,</span> <span class="n">hessian</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
 <section id="links">
 <h2>Links:<a class="headerlink" href="#links" title="Permalink to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
@@ -269,7 +318,9 @@
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Pytorch-laplace Documentation</a><ul>
+<li><a class="reference internal" href="#">Pytorch-laplace Documentation</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#usage">Usage</a><ul>
 <li><a class="reference internal" href="#links">Links:</a></li>
 </ul>
 </li>

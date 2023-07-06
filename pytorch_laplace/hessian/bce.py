@@ -1,3 +1,6 @@
+from typing import Optional
+
+import nnj
 import torch
 
 from pytorch_laplace.hessian.base import HessianCalculator
@@ -11,7 +14,17 @@ class BCEHessianCalculator(HessianCalculator):
 
         assert self.method == ""
 
-    def compute_loss(self, x, target, nnj_module, tuple_indices=None):
+    def compute_loss(
+        self,
+        x: torch.Tensor,
+        target: torch.Tensor,
+        nnj_module: nnj.Sequential,
+        tuple_indices: Optional[tuple] = None,
+    ) -> torch.Tensor:
+        """
+        Computes Binary Cross Entropy
+        """
+
         with torch.no_grad():
             val = nnj_module(x)
             assert val.shape == target.shape
@@ -25,7 +38,17 @@ class BCEHessianCalculator(HessianCalculator):
             cross_entropy = torch.sum(cross_entropy)
             return cross_entropy
 
-    def compute_gradient(self, x, target, nnj_module, tuple_indices=None):
+    def compute_gradient(
+        self,
+        x: torch.Tensor,
+        target: torch.Tensor,
+        nnj_module: nnj.Sequential,
+        tuple_indices: Optional[tuple] = None,
+    ) -> torch.Tensor:
+        """
+        Computes gradient of the network
+        """
+
         with torch.no_grad():
             val = nnj_module(x)
             assert val.shape == target.shape
@@ -41,7 +64,13 @@ class BCEHessianCalculator(HessianCalculator):
             gradient = torch.mean(gradient, dim=0)
             return gradient
 
-    def compute_hessian(self, x, nnj_module, tuple_indices=None):
+    def compute_hessian(
+        self, x: torch.Tensor, nnj_module: nnj.Sequential, tuple_indices: Optional[tuple] = None
+    ) -> torch.Tensor:
+        """
+        Computes Generalized Gauss-Newton approximation (J^T H J) of the hessian of the network
+        """
+
         with torch.no_grad():
             val = nnj_module(x)
 
@@ -50,7 +79,7 @@ class BCEHessianCalculator(HessianCalculator):
             H = H.reshape(val.shape[0], -1)  # hessian in diagonal form
 
             # backpropagate through the network
-            Jt_H_J = nnj_module._jTmjp(
+            Jt_H_J = nnj_module.jTmjp(
                 x,
                 val,
                 H,

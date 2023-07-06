@@ -2,16 +2,19 @@
 
 The Laplace approximation is an efficent and useful method to estimate uncertainties of neural networks. This repo contains a simple and flexible implementation of both laplace and linearized laplace.
 
+## Documentation
+
+https://frederikwarburg.github.io/pytorch-laplace/
+
 ## Installation
 
-First install nnj (https://github.com/frederikwarburg/nnj)
+First install nnj (https://github.com/IlMioFrizzantinoAmabile/nnj)
 
 ```bash
 pip install -e .
 ```
 
-
-## Methods
+## Usage
 
 ### Laplace of neural network
 
@@ -22,9 +25,6 @@ pip install -e .
 
 ```python
 ```
-
-
-### To do:
 
 
 
