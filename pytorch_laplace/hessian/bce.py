@@ -9,10 +9,8 @@ from pytorch_laplace.hessian.base import HessianCalculator
 class BCEHessianCalculator(HessianCalculator):
     "Binary Cross Entropy"
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        assert self.method == ""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @torch.no_grad()
     def compute_loss(
@@ -20,7 +18,6 @@ class BCEHessianCalculator(HessianCalculator):
         x: torch.Tensor,
         target: torch.Tensor,
         nnj_module: nnj.Sequential,
-        tuple_indices: Optional[tuple] = None,
     ) -> torch.Tensor:
         """
         Computes Binary Cross Entropy
@@ -44,7 +41,6 @@ class BCEHessianCalculator(HessianCalculator):
         x: torch.Tensor,
         target: torch.Tensor,
         nnj_module: nnj.Sequential,
-        tuple_indices: Optional[tuple] = None,
     ) -> torch.Tensor:
         """
         Computes gradient of the network
@@ -58,7 +54,7 @@ class BCEHessianCalculator(HessianCalculator):
 
         # backpropagate through the network
         gradient = gradient.reshape(val.shape[0], -1)
-        gradient = nnj_module._vjp(x, val, gradient, wrt=self.wrt)
+        gradient = nnj_module._vjp(x, val, gradient, wrt="weight")
 
         # average along batch size
         gradient = torch.mean(gradient, dim=0)
@@ -68,8 +64,8 @@ class BCEHessianCalculator(HessianCalculator):
     def compute_hessian(
         self,
         x: torch.Tensor,
+        target: torch.Tensor,
         nnj_module: nnj.Sequential,
-        tuple_indices: Optional[tuple] = None,
     ) -> torch.Tensor:
         """
         Computes Generalized Gauss-Newton approximation (J^T H J) of the hessian of the network
@@ -86,7 +82,7 @@ class BCEHessianCalculator(HessianCalculator):
             x,
             val,
             H,
-            wrt=self.wrt,
+            wrt="weight",
             from_diag=True,
             to_diag=self.shape == "diagonal",
             diag_backprop=self.speed == "fast",

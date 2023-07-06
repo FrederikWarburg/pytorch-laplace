@@ -1,15 +1,24 @@
+from typing import Tuple, Union, Literal
+
+import nnj
 import torch
 
 from pytorch_laplace.hessian.base import HessianCalculator
 
 
-def _arccos(z1, z2):
+def _arccos(z1: torch.Tensor, z2: torch.Tensor):
+    """
+    TODO: docstring
+    """
     z1_norm = torch.sum(z1**2, dim=1) ** (0.5)
     z2_norm = torch.sum(z2**2, dim=1) ** (0.5)
     return 0.5 * torch.einsum("bi,bi->b", z1, z2) / (z1_norm * z2_norm)
 
 
-def _arccos_hessian(z1, z2):
+def _arccos_hessian(z1: torch.Tensor, z2: torch.Tensor):
+    """
+    TODO: docstring
+    """
     z1_norm = torch.sum(z1**2, dim=1) ** (0.5)
     z2_norm = torch.sum(z2**2, dim=1) ** (0.5)
     z1_normalized = torch.einsum("bi,b->bi", z1, 1 / z1_norm)
@@ -36,7 +45,7 @@ def _arccos_hessian(z1, z2):
     H_11_normalized = torch.einsum("bij,b->bij", H_11, 1 / (z1_norm**2))
     H_12_normalized = torch.einsum("bij,b->bij", H_12, 1 / (z1_norm * z2_norm))
     H_22_normalized = torch.einsum("bij,b->bij", H_22, 1 / (z2_norm**2))
-    return tuple((H_11_normalized, H_12_normalized, H_22_normalized))
+    return H_11_normalized, H_12_normalized, H_22_normalized
 
 
 class ContrastiveHessianCalculator(HessianCalculator):
@@ -52,13 +61,26 @@ class ContrastiveHessianCalculator(HessianCalculator):
         self.method == "fix"
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, method: Literal["full", "fix", "pos"], *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
+        self.method = method
         assert self.method in ("full", "fix", "pos")
 
     @torch.no_grad()
-    def compute_loss(self, x, target, nnj_module, tuple_indices):
+    def compute_loss(
+        self,
+        x: torch.Tensor,
+        target: torch.Tensor,
+        nnj_module: nnj.Sequential,
+        tuple_indices: Tuple,
+    ) -> torch.Tensor:
+        """
+        Compute contrastive loss
+
+        L_{con} = 0.5 * || x - y ||^2
+
+        """
         # unpack tuple indices
         if len(tuple_indices) == 3:
             a, p, n = tuple_indices
@@ -85,11 +107,27 @@ class ContrastiveHessianCalculator(HessianCalculator):
         return pos - neg
 
     @torch.no_grad()
-    def compute_gradient(self, x, target, nnj_module, tuple_indices):
+    def compute_gradient(
+        self,
+        x: torch.Tensor,
+        target: torch.Tensor,
+        nnj_module: nnj.Sequential,
+        tuple_indices: Tuple,
+    ) -> torch.Tensor:
         raise NotImplementedError
 
     @torch.no_grad()
-    def compute_hessian(self, x, nnj_module, tuple_indices):
+    def compute_hessian(
+        self,
+        x: torch.Tensor,
+        target: torch.Tensor,
+        nnj_module: nnj.Sequential,
+        tuple_indices: Tuple,
+    ) -> torch.Tensor:
+        """
+        Compute contrastive hessian
+        """
+
         # unpack tuple indices
         if len(tuple_indices) == 3:
             a, p, n = tuple_indices
@@ -100,13 +138,13 @@ class ContrastiveHessianCalculator(HessianCalculator):
 
         if self.method == "full" or self.method == "pos":
             # compute positive part
-            pos = nnj_module._jTmjp_batch2(
+            pos = nnj_module.jTmjp_batch2(
                 x[ap],
                 x[p],
                 None,
                 None,
                 None,
-                wrt=self.wrt,
+                wrt="weight",
                 to_diag=self.shape == "diagonal",
                 diag_backprop=self.speed == "fast",
             )
@@ -121,13 +159,13 @@ class ContrastiveHessianCalculator(HessianCalculator):
                 return pos
 
             # compute negative part
-            neg = nnj_module._jTmjp_batch2(
+            neg = nnj_module.jTmjp_batch2(
                 x[an],
                 x[n],
                 None,
                 None,
                 None,
-                wrt=self.wrt,
+                wrt="weight",
                 to_diag=self.shape == "diagonal",
                 diag_backprop=self.speed == "fast",
             )
@@ -145,11 +183,11 @@ class ContrastiveHessianCalculator(HessianCalculator):
             negatives = x[n] if len(tuple_indices) == 3 else torch.cat((x[an], x[n]))
 
             # compute positive part
-            pos = nnj_module._jTmjp(
+            pos = nnj_module.jTmjp(
                 positives,
                 None,
                 None,
-                wrt=self.wrt,
+                wrt="weight",
                 to_diag=self.shape == "diagonal",
                 diag_backprop=self.speed == "fast",
             )
@@ -157,11 +195,11 @@ class ContrastiveHessianCalculator(HessianCalculator):
             pos = torch.sum(pos, dim=0)
 
             # compute negative part
-            neg = nnj_module._jTmjp(
+            neg = nnj_module.jTmjp(
                 negatives,
                 None,
                 None,
-                wrt=self.wrt,
+                wrt="weight",
                 to_diag=self.shape == "diagonal",
                 diag_backprop=self.speed == "fast",
             )
@@ -175,7 +213,10 @@ class ArccosHessianCalculator(HessianCalculator):
     """
     Contrastive Loss with normalization layer included, aka. arccos loss
     L(x,y) = 0.5 * sum_i x_i * y_i
-            = 0.5 * || x / ||x|| - y / ||y|| || - 1    # arccos distance is equivalent to contrastive distance & normalization layer
+          = 0.5 * || x / ||x|| - y / ||y|| || - 1
+
+    arccos distance is equivalent to contrastive distance & normalization layer
+
     Arcos(x, tuples) = sum_positives L(x,y) - sum_negatives L(x,y)
 
     Notice that the arccos loss value is the same for
@@ -190,10 +231,17 @@ class ArccosHessianCalculator(HessianCalculator):
         assert self.method in ("full", "fix", "pos")
 
     @torch.no_grad()
-    def compute_loss(self, x, nnj_module, tuple_indices):
+    def compute_loss(
+        self,
+        x: torch.Tensor,
+        nnj_module: nnj.Sequential,
+        tuple_indices: Tuple,
+    ) -> torch.Tensor:
         """
         L(x,y) = 0.5 * sum_i x_i * y_i
-               = 0.5 * || x / ||x|| - y / ||y|| || - 1    # arccos distance is equivalent to contrastive distance & normalization layer
+               = 0.5 * || x / ||x|| - y / ||y|| || - 1
+
+        arccos distance is equivalent to contrastive distance & normalization layer
         Arcos(x, tuples) = sum_positives L(x,y) - sum_negatives L(x,y)
         """
 
@@ -223,11 +271,25 @@ class ArccosHessianCalculator(HessianCalculator):
         return pos - neg
 
     @torch.no_grad()
-    def compute_gradient(self, x, target, nnj_module, tuple_indices):
+    def compute_gradient(
+        self,
+        x: torch.Tensor,
+        target: torch.Tensor,
+        nnj_module: nnj.Sequential,
+        tuple_indices: Tuple,
+    ) -> torch.Tensor:
         raise NotImplementedError
 
     @torch.no_grad()
-    def compute_hessian(self, x, nnj_module, tuple_indices):
+    def compute_hessian(
+        self,
+        x: torch.Tensor,
+        nnj_module: nnj.Sequential,
+        tuple_indices: Tuple,
+    ) -> torch.Tensor:
+        """
+        Compute the hessian
+        """
         # unpack tuple indices
         if len(tuple_indices) == 3:
             a, p, n = tuple_indices
@@ -248,13 +310,13 @@ class ArccosHessianCalculator(HessianCalculator):
             H = _arccos_hessian(z1, z2)
 
             # backpropagate through the network
-            pos = nnj_module._jTmjp_batch2(
+            pos = nnj_module.jTmjp_batch2(
                 x[ap],
                 x[p],
                 z1,
                 z2,
                 H,
-                wrt=self.wrt,
+                wrt="weight",
                 to_diag=self.shape == "diagonal",
                 from_diag=False,
                 diag_backprop=self.speed == "fast",
@@ -280,13 +342,13 @@ class ArccosHessianCalculator(HessianCalculator):
             H = _arccos_hessian(z1, z2)
 
             # backpropagate through the network
-            neg = nnj_module._jTmjp_batch2(
+            neg = nnj_module.jTmjp_batch2(
                 x[an],
                 x[n],
                 z1,
                 z2,
                 H,
-                wrt=self.wrt,
+                wrt="weight",
                 to_diag=self.shape == "diagonal",
                 from_diag=False,
                 diag_backprop=self.speed == "fast",
@@ -310,19 +372,19 @@ class ArccosHessianCalculator(HessianCalculator):
             H1, _, H2 = _arccos_hessian(z1, z2)
 
             # backpropagate through the network
-            pos1 = nnj_module._jTmjp(
+            pos1 = nnj_module.jTmjp(
                 x[ap],
                 None,
                 H1,
-                wrt=self.wrt,
+                wrt="weight",
                 to_diag=self.shape == "diagonal",
                 diag_backprop=self.speed == "fast",
             )
-            pos2 = nnj_module._jTmjp(
+            pos2 = nnj_module.jTmjp(
                 x[p],
                 None,
                 H2,
-                wrt=self.wrt,
+                wrt="weight",
                 to_diag=self.shape == "diagonal",
                 diag_backprop=self.speed == "fast",
             )
@@ -339,19 +401,19 @@ class ArccosHessianCalculator(HessianCalculator):
             H1, _, H2 = _arccos_hessian(z1, z2)
 
             # backpropagate through the network
-            neg1 = nnj_module._jTmjp(
+            neg1 = nnj_module.jTmjp(
                 x[an],
                 None,
                 H1,
-                wrt=self.wrt,
+                wrt="weight",
                 to_diag=self.shape == "diagonal",
                 diag_backprop=self.speed == "fast",
             )
-            neg2 = nnj_module._jTmjp(
+            neg2 = nnj_module.jTmjp(
                 x[n],
                 None,
                 H2,
-                wrt=self.wrt,
+                wrt="weight",
                 to_diag=self.shape == "diagonal",
                 diag_backprop=self.speed == "fast",
             )

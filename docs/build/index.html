@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/css/readthedocs.css" type="text/css" />
   <link rel="index" title="Index" href="genindex.html" />
   <link rel="search" title="Search" href="search.html" />
-  <link rel="next" title="Hessian Estimators" href="apis/hessian.html" />
+  <link rel="next" title="Introduction" href="laplace/index.html" />
   <!-- Google Analytics -->
   <script type="text/javascript">
     var collapsedSections = [];
@@ -141,11 +141,21 @@
         
         
         
-        <p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+        <p class="caption" role="heading"><span class="caption-text">Learn about Laplace</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="laplace/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="laplace/index.html#intuition">Intuition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="laplace/index.html#derivations">Derivations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="laplace/index.html#hessian-approximations">Hessian approximations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="laplace/index.html#sampling-laplace">Sampling (Laplace)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="laplace/index.html#sampling-linearized-laplace">Sampling (Linearized Laplace)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="laplace/index.html#getting-started">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="apis/hessian.html">Hessian Estimators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="apis/laplace.html">Laplace Samplers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="apis/optimization.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="apis/optimization.html">Optimization</a></li>
 </ul>
 
         
@@ -216,10 +226,11 @@
                 
   <section id="pytorch-laplace-documentation">
 <h1>Pytorch-laplace Documentation<a class="headerlink" href="#pytorch-laplace-documentation" title="Permalink to this heading">¶</a></h1>
-<p>Pytorch-laplace provides a simple API for Laplace approximation in PyTorch. With minimal code changes, you can use it to approximate the posterior of any PyTorch model.
-It supports both Laplace and Linearized Laplace. It focuses on diagonal hessian approximations, but also supports low-rank hessian approximations such as the kronicker factorization.</p>
-<p>Github: <a class="reference external" href="https://github.com/FrederikWarburg/pytorch-laplace">https://github.com/FrederikWarburg/pytorch-laplace</a>
-Authors: Frederik Warburg and Marco Miani</p>
+<p>Pytorch-laplace provides a simple API for Laplace approximation (LA) in PyTorch. With minimal code changes, you can use it to approximate the posterior of any PyTorch model.
+It supports both Laplace and Linearized Laplace. It uses nnj as backend for approximate hessian computations, which is an order of magnitude faster and more memory efficient than alternatives.
+The repo focuses on LA focues on diagonal hessian approximations, but also supports low-rank hessian approximations such as the kronicker factorization.</p>
+<p>Github: <a class="reference external" href="https://github.com/FrederikWarburg/pytorch-laplace">https://github.com/FrederikWarburg/pytorch-laplace</a></p>
+<p>Authors: Frederik Warburg and Marco Miani</p>
 </section>
 <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
@@ -233,6 +244,13 @@ Authors: Frederik Warburg and Marco Miani</p>
 <span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>pytorch-laplace
 <span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
+</div>
+</section>
+<section id="want-to-learn-more-about-the-laplace-approximation">
+<h1>Want to learn more about the Laplace approximation?<a class="headerlink" href="#want-to-learn-more-about-the-laplace-approximation" title="Permalink to this heading">¶</a></h1>
+<p>Check out our educational content, e.g. start reading our <a class="reference internal" href="laplace/index.html#introduction"><span class="std std-ref">Introduction to Laplacet</span></a>  to learn more about the Laplace approximation.
+The document seek to provide a simple introduction to the Laplace approximation and how to use it in PyTorch.</p>
+<div class="toctree-wrapper compound">
 </div>
 </section>
 <section id="usage">
@@ -272,7 +290,7 @@ Authors: Frederik Warburg and Marco Miani</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="apis/hessian.html">Hessian Estimators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="apis/laplace.html">Laplace Samplers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="apis/optimization.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="apis/optimization.html">Optimization</a></li>
 </ul>
 </div>
 </section>
@@ -286,7 +304,7 @@ Authors: Frederik Warburg and Marco Miani</p>
   
   <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
     
-    <a href="apis/hessian.html" class="btn btn-neutral float-right" title="Hessian Estimators" accesskey="n"
+    <a href="laplace/index.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n"
       rel="next">Next <img src="_static/images/chevron-right-blue.svg"
         class="next-page"></a>
     
@@ -320,6 +338,7 @@ Authors: Frederik Warburg and Marco Miani</p>
               <ul>
 <li><a class="reference internal" href="#">Pytorch-laplace Documentation</a></li>
 <li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#want-to-learn-more-about-the-laplace-approximation">Want to learn more about the Laplace approximation?</a></li>
 <li><a class="reference internal" href="#usage">Usage</a><ul>
 <li><a class="reference internal" href="#links">Links:</a></li>
 </ul>

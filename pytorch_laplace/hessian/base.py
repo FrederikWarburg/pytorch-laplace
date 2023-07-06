@@ -1,6 +1,7 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Literal
 
+import nnj
 import torch
 from torch import nn
 
@@ -8,34 +9,41 @@ from torch import nn
 class HessianCalculator(ABC, nn.Module):
     def __init__(
         self,
-        wrt: Literal["input", "weight"] = "weight",
         shape: Literal["full", "block", "diagonal"] = "diagonal",
-        speed: Literal["slow", "half", "fast"] = "half",
-        method: Literal["", "full", "pos", "fix"] = "",
+        speed: Literal["half", "fast"] = "half",
+        *args,
+        **kwargs,
     ) -> None:
         super().__init__()
 
-        assert wrt in ("weight", "input")
-        assert shape in ("full", "block", "diagonal")
-        assert speed in ("slow", "half", "fast")
-        assert method in ("", "full", "pos", "fix")
+        assert shape in ("full", "block", "diagonal")  # TODO: better name
+        assert speed in ("half", "fast")  # TODO: better name
 
-        self.wrt = wrt
         self.shape = shape
         self.speed = speed
-        self.method = method
-        if speed == "slow":
-            # second order
-            raise NotImplementedError
 
+    @abstractmethod
     @torch.no_grad()
-    def compute_loss(self, x, target, nnj_module, tuple_indices=None):
+    def compute_loss(
+        self,
+        x: torch.Tensor,
+        target: torch.Tensor,
+        nnj_module: nnj.Sequential,
+        *args,
+        **kwargs,
+    ) -> torch.Tensor:
         raise NotImplementedError
 
+    @abstractmethod
     @torch.no_grad()
-    def compute_gradient(self, x, target, nnj_module, tuple_indices=None):
+    def compute_gradient(
+        self, x: torch.Tensor, target: torch.Tensor, nnj_module: nnj.Sequential, *args, **kwargs
+    ) -> torch.Tensor:
         raise NotImplementedError
 
+    @abstractmethod
     @torch.no_grad()
-    def compute_hessian(self, x, nnj_module, tuple_indices=None):
+    def compute_hessian(
+        self, x: torch.Tensor, target: torch.Tensor, nnj_module: nnj.Sequential, *args, **kwargs
+    ) -> torch.Tensor:
         raise NotImplementedError
