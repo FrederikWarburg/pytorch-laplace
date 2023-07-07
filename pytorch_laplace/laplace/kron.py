@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Tuple, List
 
 import nnj
 import torch
@@ -8,7 +8,63 @@ from pytorch_laplace.laplace.base import BaseLaplace
 
 
 class BlockLaplace(BaseLaplace):
-    def sample(self, parameters: torch.Tensor, posterior_scale: float, n_samples: int = 100):
+    def laplace(
+        self,
+        x: torch.Tensor,
+        hessian: torch.Tensor,
+        model: nnj.Sequential,
+        scale: float = 1,
+        prior_prec: float = 1,
+        n_samples: int = 100,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Compute the Laplace approximation of the posterior distribution of the parameters.
+
+        Args:
+            x: The input data.
+            y: The target data.
+            model: The neural network.
+            prior_prec: The precision of the prior distribution.
+            n_samples: The number of samples to draw.
+            scale: The scale of the posterior distribution.
+            device
+
+        """
+
+        sigma_q = self.posterior_scale(hessian=hessian, scale=scale, prior_prec=prior_prec)
+        mu_q = parameters_to_vector(model.parameters())
+
+        samples = self.sample_from_normal(mu_q, sigma_q, n_samples)
+        pred_mu, pred_sigma = self.normal_from_samples(x, samples, model)
+
+        return pred_mu, pred_sigma
+
+    def linearized_laplace(
+        self,
+        x: torch.Tensor,
+        hessian: torch.Tensor,
+        model: nnj.Sequential,
+        scale: float = 1,
+        prior_prec: float = 1,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Compute the linearized Laplace approximation of the posterior distribution of the parameters.
+
+        .. note::
+            This does not require sampling from the posterior distribution with using nnj as backend!
+
+        Args:
+            x: The input data.
+            hessian: The Hessian of the loss function.
+            model: The neural network.
+            scale: The scale of the posterior distribution.
+            prior_prec: The precision of the prior distribution.
+
+        """
+
+        raise NotImplementedError
+
+    def sample_from_normal(self, mu: torch.Tensor, scale: List[torch.Tensor], n_samples: int = 100):
         """
         Sample parameters from the posterior distribution of the parameters.
 
@@ -16,18 +72,18 @@ class BlockLaplace(BaseLaplace):
             samples = parameters + posterior\_scale * epsilon
 
         Args:
-            parameters: The parameters of the model.
-            posterior_scale: The posterior scale of the parameters.
+            mu: The parameters of the model.
+            scale: The posterior scale of the parameters.
             n_samples: The number of samples to draw.
         """
 
         n_samples = torch.tensor([n_samples])
         count = 0
         param_samples = []
-        for post_scale_layer in posterior_scale:
+        for post_scale_layer in scale:
             n_param_layer = len(post_scale_layer)
 
-            layer_param = parameters[count : count + n_param_layer]
+            layer_param = mu[count : count + n_param_layer]
             normal = torch.distributions.multivariate_normal.MultivariateNormal(
                 layer_param, covariance_matrix=post_scale_layer
             )
@@ -36,8 +92,26 @@ class BlockLaplace(BaseLaplace):
 
             count += n_param_layer
 
-        param_samples = torch.cat(param_samples, dim=1).to(parameters.device)
+        param_samples = torch.cat(param_samples, dim=1).to(mu.device)
         return param_samples
+
+    @torch.no_grad()
+    def normal_from_samples(
+        self,
+        x: torch.Tensor,
+        samples: torch.Tensor,
+        model: nnj.Sequential,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Compute the emperical mean and scale of the normal distribution from samples
+
+        Args:
+            x: The input data
+            samples: The samples
+            model: The neural network.
+        """
+
+        raise NotImplementedError
 
     def posterior_scale(self, hessian: torch.Tensor, scale: float = 1, prior_prec: float = 1):
         """
@@ -56,58 +130,3 @@ class BlockLaplace(BaseLaplace):
         ]
         posterior_scale = [torch.cholesky_inverse(layer_post_prec) for layer_post_prec in posterior_precision]
         return posterior_scale
-
-    def init_hessian(self, data_size: int, net: nnj.Sequential, device: str):
-        """
-        Initialize the low-rank Hessian matrix.
-
-        Args:
-            data_size: The size of the dataset.
-            net: The neural network.
-            device: The device to use.
-        """
-        hessian = []
-        for layer in net:
-            # if parametric layer
-            if isinstance(layer, torch.nn.Conv2d) or isinstance(layer, torch.nn.Linear):
-                params = parameters_to_vector(layer.parameters())
-                n_params = len(params)
-                hessian.append(data_size * torch.ones(n_params, n_params, device=device))
-
-        return hessian
-
-    def scale(self, hessian_batch: torch.Tensor, batch_size: int, data_size: int):
-        """
-        Scales the Hessian approximated from a batch to the full dataset.
-
-        Args:
-            hessian_batch: The Hessian approximated from a batch.
-            batch_size: The size of the batch.
-            data_size: The size of the dataset.
-        """
-        return [h / batch_size * data_size for h in hessian_batch]
-
-    def aveage_hessian_samples(self, hessian: torch.Tensor, constant: Optional[float] = 1):
-        """
-        Average the Hessian samples.
-
-        Args:
-            hessian: The Hessian samples.
-            constant: The constant to multiply the Hessian with.
-        """
-        n_samples = len(hessian)
-        n_layers = len(hessian[0])
-        hessian_mean = []
-        for i in range(n_layers):
-            tmp = None
-            for s in range(n_samples):
-                if tmp is None:
-                    tmp = hessian[s][i]
-                else:
-                    tmp += hessian[s][i]
-
-            tmp = tmp / n_samples
-            tmp = constant * tmp + torch.diag_embed(torch.ones(len(tmp), device=tmp.device))
-            hessian_mean.append(tmp)
-
-        return hessian_mean

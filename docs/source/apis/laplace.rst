@@ -7,5 +7,8 @@ Laplace Samplers
 .. autoclass:: DiagLaplace
     :members:
 
+.. autoclass:: OnlineDiagLaplace
+    :members:
+
 .. autoclass:: BlockLaplace
     :members:

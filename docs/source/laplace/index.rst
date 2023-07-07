@@ -119,9 +119,9 @@ We can get the hessian of the loss w.r.t. the parameters as follows:
     # initialize hessian
     hessian = torch.zeros_like(model.parameters())
     for x, y in train_loader:
-        # compute hessian
-        hessian += hessian_calculator(
-          x=x, nnj_module=model,
+        # compute hessian approximation
+        hessian += hessian_calculator.compute_hessian(
+          x=x, model=model,
         )
 
 Sampling (Laplace)

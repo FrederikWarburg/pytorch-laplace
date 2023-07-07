@@ -7,6 +7,8 @@ from .hessian.cross_entropy import CEHessianCalculator
 from .hessian.mse import MSEHessianCalculator
 from .laplace.diag import DiagLaplace
 from .laplace.kron import BlockLaplace
+from .laplace.online_diag import OnlineDiagLaplace
+from .laplace.online_kron import OnlineBlockLaplace
 from .optimization.prior_precision import (
     log_det_ratio,
     log_marginal_likelihood,
@@ -26,4 +28,6 @@ __all__ = [
     "log_marginal_likelihood",
     "DiagLaplace",
     "BlockLaplace",
+    "OnlineDiagLaplace",
+    "OnlineBlockLaplace",
 ]

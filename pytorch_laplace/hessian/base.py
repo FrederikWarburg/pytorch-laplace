@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Literal
+from typing import Literal, Optional
 
 import nnj
 import torch
@@ -16,11 +16,11 @@ class HessianCalculator(ABC, nn.Module):
     ) -> None:
         super().__init__()
 
-        assert shape in ("full", "block", "diag")  # TODO: better name
-        assert speed in ("half", "fast")  # TODO: better name
+        assert hessian_shape in ("full", "block", "diag")  # TODO: better name
+        assert approximation_accuracy in ("exact", "approx")  # TODO: better name
 
-        self.shape = shape
-        self.speed = speed
+        self.hessian_shape = hessian_shape
+        self.approximation_accuracy = approximation_accuracy
 
     @abstractmethod
     @torch.no_grad()
@@ -28,7 +28,7 @@ class HessianCalculator(ABC, nn.Module):
         self,
         x: torch.Tensor,
         target: torch.Tensor,
-        nnj_module: nnj.Sequential,
+        model: nnj.Sequential,
         *args,
         **kwargs,
     ) -> torch.Tensor:
@@ -37,13 +37,13 @@ class HessianCalculator(ABC, nn.Module):
     @abstractmethod
     @torch.no_grad()
     def compute_gradient(
-        self, x: torch.Tensor, target: torch.Tensor, nnj_module: nnj.Sequential, *args, **kwargs
+        self, x: torch.Tensor, target: torch.Tensor, model: nnj.Sequential, *args, **kwargs
     ) -> torch.Tensor:
         raise NotImplementedError
 
     @abstractmethod
     @torch.no_grad()
     def compute_hessian(
-        self, x: torch.Tensor, target: torch.Tensor, nnj_module: nnj.Sequential, *args, **kwargs
+        self, x: torch.Tensor, target: Optional[torch.Tensor], model: nnj.Sequential, *args, **kwargs
     ) -> torch.Tensor:
         raise NotImplementedError

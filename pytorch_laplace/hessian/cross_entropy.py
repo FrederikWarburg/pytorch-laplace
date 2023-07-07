@@ -25,7 +25,7 @@ class CEHessianCalculator(HessianCalculator):
         self,
         x: torch.Tensor,
         target: torch.Tensor,
-        nnj_module: nnj.Sequential,
+        model: nnj.Sequential,
         reshape: Optional[Tuple] = None,
     ) -> torch.Tensor:
         """
@@ -34,11 +34,11 @@ class CEHessianCalculator(HessianCalculator):
         Args:
             x: input of the network
             target: output of the network
-            nnj_module: neural network module
+            model: neural network module
             reshape: reshape logits to this shape before computing cross entropy
         """
 
-        val = nnj_module(x)
+        val = model(x)
         if reshape is not None:
             val = val.reshape(val.shape[0], *reshape)
         assert val.shape == target.shape
@@ -62,7 +62,7 @@ class CEHessianCalculator(HessianCalculator):
         self,
         x: torch.Tensor,
         target: torch.Tensor,
-        nnj_module: nnj.Sequential,
+        model: nnj.Sequential,
         reshape: Optional[Tuple] = None,
     ) -> torch.Tensor:
         """
@@ -71,10 +71,10 @@ class CEHessianCalculator(HessianCalculator):
         Args:
             x: input of the network
             target: output of the network
-            nnj_module: neural network module
+            model: neural network module
             reshape: reshape logits to this shape before computing cross entropy
         """
-        val = nnj_module(x)
+        val = model(x)
         if reshape is not None:
             val = val.reshape(val.shape[0], *reshape)
         assert val.shape == target.shape
@@ -87,7 +87,7 @@ class CEHessianCalculator(HessianCalculator):
 
         # backpropagate through the network
         gradient = gradient.reshape(val.shape[0], -1)
-        gradient = nnj_module.vjp(x, val, gradient, wrt="weight")
+        gradient = model.vjp(x, val, gradient, wrt="weight")
 
         # average along batch size
         gradient = torch.mean(gradient, dim=0)
@@ -97,8 +97,8 @@ class CEHessianCalculator(HessianCalculator):
     def compute_hessian(
         self,
         x: torch.Tensor,
-        target: torch.Tensor,
-        nnj_module: nnj.Sequential,
+        model: nnj.Sequential,
+        target: Optional[torch.Tensor] = None,
         save_memory: bool = False,
         reshape: Optional[Tuple] = None,
     ) -> torch.Tensor:
@@ -107,12 +107,12 @@ class CEHessianCalculator(HessianCalculator):
 
         Args:
             x: input of the network
-            target: output of the network
-            nnj_module: neural network module
+            target: output of the network (not used for cross entropy)
+            model: neural network module
             reshape: reshape logits to this shape before computing cross entropy
         """
 
-        val = nnj_module(x)
+        val = model(x)
         if reshape is not None:
             val = val.reshape(val.shape[0], *reshape)
 
@@ -126,18 +126,18 @@ class CEHessianCalculator(HessianCalculator):
             # thus Jt * hessian * J = Jt * diag(softmax) * J - Jt * softmax.T * softmax * J
 
             # backpropagate through the network the diagonal part
-            Jt_diag_J = nnj_module.jTmjp(
+            Jt_diag_J = model.jTmjp(
                 x,
                 val,
                 softmax,
                 wrt="weight",
                 from_diag=True,
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
+                to_diag=self.hessian_shape == "diag",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
             # backpropagate through the network the outer product
-            softmax_J = nnj_module.vjp(x, val, softmax, wrt="weight")
-            if self.shape == "diagonal":
+            softmax_J = model.vjp(x, val, softmax, wrt="weight")
+            if self.hessian_shape == "diag":
                 Jt_outer_J = torch.einsum("bi,bi->bi", softmax_J, softmax_J)
             else:
                 Jt_outer_J = torch.einsum("bi,bj->bij", softmax_J, softmax_J)
@@ -159,14 +159,14 @@ class CEHessianCalculator(HessianCalculator):
 
             # backpropagate through the network the diagonal part
             diagonal = softmax.reshape(val.shape[0], val.shape[1:].numel())
-            Jt_diag_J = nnj_module.jTmjp(
+            Jt_diag_J = model.jTmjp(
                 x,
                 val,
                 diagonal,
                 wrt="weight",
                 from_diag=True,
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
+                to_diag=self.hessian_shape == "diag",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
             # backpropagate through the network the outer product
             if save_memory is True:
@@ -174,16 +174,16 @@ class CEHessianCalculator(HessianCalculator):
                 for point in range(p):
                     vector = torch.zeros(b, p * c, device=val.device)
                     vector[:, point * c : (point + 1) * c] = softmax[:, point, :]
-                    softmax_J = nnj_module.vjp(x, val, vector, wrt="weight")
-                    if self.shape == "diagonal":
+                    softmax_J = model.vjp(x, val, vector, wrt="weight")
+                    if self.hessian_shape == "diag":
                         Jt_outer_J += torch.einsum("bi,bi->bi", softmax_J, softmax_J)
                     else:
                         Jt_outer_J += torch.einsum("bi,bj->bij", softmax_J, softmax_J)
             elif save_memory is False:
                 pos_identity = torch.diag_embed(torch.ones(p, device=val.device))
                 matrix = torch.einsum("bpi,pq->bpqi", softmax, pos_identity).reshape(b, p, p * c)
-                softmax_J = nnj_module.mjp(x, val, matrix, wrt="weight")
-                if self.shape == "diagonal":
+                softmax_J = model.mjp(x, val, matrix, wrt="weight")
+                if self.hessian_shape == "diag":
                     Jt_outer_J = torch.einsum("bki,bki->bi", softmax_J, softmax_J)
                 else:
                     Jt_outer_J = torch.einsum("bki,bkj->bij", softmax_J, softmax_J)
@@ -211,8 +211,8 @@ class CEHessianCalculator(HessianCalculator):
                         ],
                         dim=2,
                     )
-                    softmax_J = nnj_module.mjp(x, val, matrix, wrt="weight")
-                    if self.shape == "diagonal":
+                    softmax_J = model.mjp(x, val, matrix, wrt="weight")
+                    if self.hessian_shape == "diag":
                         Jt_outer_J += torch.einsum("bki,bki->bi", softmax_J, softmax_J)
                     else:
                         Jt_outer_J += torch.einsum("bki,bkj->bij", softmax_J, softmax_J)

@@ -1,4 +1,4 @@
-from typing import Literal, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 import nnj
 import torch
@@ -74,7 +74,7 @@ class ContrastiveHessianCalculator(HessianCalculator):
         self,
         x: torch.Tensor,
         target: torch.Tensor,
-        nnj_module: nnj.Sequential,
+        model: nnj.Sequential,
         tuple_indices: Tuple,
     ) -> torch.Tensor:
         """
@@ -88,7 +88,7 @@ class ContrastiveHessianCalculator(HessianCalculator):
         Args:
             x: Images of the anchor and positive/negative samples.
             target: Embeddings of the anchor and positive/negative samples.
-            nnj_module: Neural network module.
+            model: Neural network module.
             tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
         """
         # unpack tuple indices
@@ -100,7 +100,7 @@ class ContrastiveHessianCalculator(HessianCalculator):
         assert len(ap) == len(p) and len(an) == len(n)
 
         # compute positive part
-        pos = 0.5 * (nnj_module(x[ap]) - nnj_module(x[p])) ** 2
+        pos = 0.5 * (model(x[ap]) - model(x[p])) ** 2
 
         # sum along batch size
         pos = torch.sum(pos, dim=0)
@@ -109,7 +109,7 @@ class ContrastiveHessianCalculator(HessianCalculator):
             return pos
 
         # compute negative part
-        neg = 0.5 * (nnj_module(x[an]) - nnj_module(x[n])) ** 2
+        neg = 0.5 * (model(x[an]) - model(x[n])) ** 2
 
         # sum along batch size
         neg = torch.sum(neg, dim=0)
@@ -121,7 +121,7 @@ class ContrastiveHessianCalculator(HessianCalculator):
         self,
         x: torch.Tensor,
         target: torch.Tensor,
-        nnj_module: nnj.Sequential,
+        model: nnj.Sequential,
         tuple_indices: Tuple,
     ) -> torch.Tensor:
         """
@@ -130,7 +130,7 @@ class ContrastiveHessianCalculator(HessianCalculator):
         Args:
             x: Images of the anchor and positive/negative samples.
             target: Embeddings of the anchor and positive/negative samples.
-            nnj_module: Neural network module.
+            model: Neural network module.
             tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
         """
         raise NotImplementedError
@@ -139,9 +139,9 @@ class ContrastiveHessianCalculator(HessianCalculator):
     def compute_hessian(
         self,
         x: torch.Tensor,
-        target: torch.Tensor,
-        nnj_module: nnj.Sequential,
+        model: nnj.Sequential,
         tuple_indices: Tuple,
+        target: Optional[torch.Tensor]=None,
     ) -> torch.Tensor:
         """
         Compute contrastive hessian
@@ -149,7 +149,7 @@ class ContrastiveHessianCalculator(HessianCalculator):
         Args:
             x: Images of the anchor and positive/negative samples.
             target: Embeddings of the anchor and positive/negative samples.
-            nnj_module: Neural network module.
+            model: Neural network module.
             tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
         """
 
@@ -163,17 +163,17 @@ class ContrastiveHessianCalculator(HessianCalculator):
 
         if self.method == "full" or self.method == "pos":
             # compute positive part
-            pos = nnj_module.jTmjp_batch2(
+            pos = model.jTmjp_batch2(
                 x[ap],
                 x[p],
                 None,
                 None,
                 None,
                 wrt="weight",
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
+                to_diag=self.hessian_shape == "diag",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
-            if self.shape == "diagonal":
+            if self.hessian_shape == "diag":
                 pos = pos[0] - 2 * pos[1] + pos[2]
             else:
                 raise NotImplementedError
@@ -184,17 +184,17 @@ class ContrastiveHessianCalculator(HessianCalculator):
                 return pos
 
             # compute negative part
-            neg = nnj_module.jTmjp_batch2(
+            neg = model.jTmjp_batch2(
                 x[an],
                 x[n],
                 None,
                 None,
                 None,
                 wrt="weight",
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
+                to_diag=self.hessian_shape == "diag",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
-            if self.shape == "diagonal":
+            if self.hessian_shape == "diag":
                 neg = neg[0] - 2 * neg[1] + neg[2]
             else:
                 raise NotImplementedError
@@ -208,25 +208,25 @@ class ContrastiveHessianCalculator(HessianCalculator):
             negatives = x[n] if len(tuple_indices) == 3 else torch.cat((x[an], x[n]))
 
             # compute positive part
-            pos = nnj_module.jTmjp(
+            pos = model.jTmjp(
                 positives,
                 None,
                 None,
                 wrt="weight",
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
+                to_diag=self.hessian_shape == "diag",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
             # sum along batch size
             pos = torch.sum(pos, dim=0)
 
             # compute negative part
-            neg = nnj_module.jTmjp(
+            neg = model.jTmjp(
                 negatives,
                 None,
                 None,
                 wrt="weight",
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
+                to_diag=self.hessian_shape == "diag",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
             # sum along batch size
             neg = torch.sum(neg, dim=0)
@@ -263,9 +263,9 @@ class ArccosHessianCalculator(HessianCalculator):
     def compute_loss(
         self,
         x: torch.Tensor,
-        target: torch.Tensor,
-        nnj_module: nnj.Sequential,
+        model: nnj.Sequential,
         tuple_indices: Tuple,
+        target: Optional[torch.Tensor]=None,
     ) -> torch.Tensor:
         """
         Compute arccos loss
@@ -284,7 +284,7 @@ class ArccosHessianCalculator(HessianCalculator):
         Args:
             x: Images of the anchor and positive/negative samples.
             target: Embeddings of the anchor and positive/negative samples.
-            nnj_module: Neural network module.
+            model: Neural network module.
             tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
         """
 
@@ -297,7 +297,7 @@ class ArccosHessianCalculator(HessianCalculator):
         assert len(ap) == len(p) and len(an) == len(n)
 
         # compute positive part
-        pos = _arccos(nnj_module(x[ap]), nnj_module(x[p]))
+        pos = _arccos(model(x[ap]), model(x[p]))
 
         # sum along batch size
         pos = torch.sum(pos, dim=0)
@@ -306,7 +306,7 @@ class ArccosHessianCalculator(HessianCalculator):
             return pos
 
         # compute negative part
-        neg = _arccos(nnj_module(x[an]), nnj_module(x[n]))
+        neg = _arccos(model(x[an]), model(x[n]))
 
         # sum along batch size
         neg = torch.sum(neg, dim=0)
@@ -318,7 +318,7 @@ class ArccosHessianCalculator(HessianCalculator):
         self,
         x: torch.Tensor,
         target: torch.Tensor,
-        nnj_module: nnj.Sequential,
+        model: nnj.Sequential,
         tuple_indices: Tuple,
     ) -> torch.Tensor:
         """
@@ -327,7 +327,7 @@ class ArccosHessianCalculator(HessianCalculator):
         Args:
             x: Images of the anchor and positive/negative samples.
             target: Embeddings of the anchor and positive/negative samples.
-            nnj_module: Neural network module.
+            model: Neural network module.
             tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
         """
         raise NotImplementedError
@@ -337,7 +337,7 @@ class ArccosHessianCalculator(HessianCalculator):
         self,
         x: torch.Tensor,
         target: torch.Tensor,
-        nnj_module: nnj.Sequential,
+        model: nnj.Sequential,
         tuple_indices: Tuple,
     ) -> torch.Tensor:
         """
@@ -346,7 +346,7 @@ class ArccosHessianCalculator(HessianCalculator):
         Args:
             x: Images of the anchor and positive/negative samples.
             target: Embeddings of the anchor and positive/negative samples.
-            nnj_module: Neural network module.
+            model: Neural network module.
             tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
         """
         # unpack tuple indices
@@ -363,24 +363,24 @@ class ArccosHessianCalculator(HessianCalculator):
             ###
 
             # forward pass
-            z1, z2 = nnj_module(x[ap]), nnj_module(x[p])
+            z1, z2 = model(x[ap]), model(x[p])
 
             # initialize the hessian of the loss
             H = _arccos_hessian(z1, z2)
 
             # backpropagate through the network
-            pos = nnj_module.jTmjp_batch2(
+            pos = model.jTmjp_batch2(
                 x[ap],
                 x[p],
                 z1,
                 z2,
                 H,
                 wrt="weight",
-                to_diag=self.shape == "diagonal",
+                to_diag=self.hessian_shape == "diag",
                 from_diag=False,
-                diag_backprop=self.speed == "fast",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
-            if self.shape == "diagonal":
+            if self.hessian_shape == "diag":
                 pos = pos[0] - 2 * pos[1] + pos[2]
             else:
                 raise NotImplementedError
@@ -395,24 +395,24 @@ class ArccosHessianCalculator(HessianCalculator):
             ###
 
             # forward pass
-            z1, z2 = nnj_module(x[an]), nnj_module(x[n])
+            z1, z2 = model(x[an]), model(x[n])
 
             # initialize the hessian of the loss
             H = _arccos_hessian(z1, z2)
 
             # backpropagate through the network
-            neg = nnj_module.jTmjp_batch2(
+            neg = model.jTmjp_batch2(
                 x[an],
                 x[n],
                 z1,
                 z2,
                 H,
                 wrt="weight",
-                to_diag=self.shape == "diagonal",
+                to_diag=self.hessian_shape == "diag",
                 from_diag=False,
-                diag_backprop=self.speed == "fast",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
-            if self.shape == "diagonal":
+            if self.hessian_shape == "diag":
                 neg = neg[0] - 2 * neg[1] + neg[2]
             else:
                 raise NotImplementedError
@@ -425,27 +425,27 @@ class ArccosHessianCalculator(HessianCalculator):
             ### compute positive part ###
 
             # forward pass
-            z1, z2 = nnj_module(x[ap]), nnj_module(x[p])
+            z1, z2 = model(x[ap]), model(x[p])
 
             # initialize the hessian of the loss
             H1, _, H2 = _arccos_hessian(z1, z2)
 
             # backpropagate through the network
-            pos1 = nnj_module.jTmjp(
+            pos1 = model.jTmjp(
                 x[ap],
                 None,
                 H1,
                 wrt="weight",
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
+                to_diag=self.hessian_shape == "diag",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
-            pos2 = nnj_module.jTmjp(
+            pos2 = model.jTmjp(
                 x[p],
                 None,
                 H2,
                 wrt="weight",
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
+                to_diag=self.hessian_shape == "diag",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
             pos = pos1 + pos2
 
@@ -454,27 +454,27 @@ class ArccosHessianCalculator(HessianCalculator):
 
             ### compute negative part ###
             # forward pass
-            z1, z2 = nnj_module(x[an]), nnj_module(x[n])
+            z1, z2 = model(x[an]), model(x[n])
 
             # initialize the hessian of the loss
             H1, _, H2 = _arccos_hessian(z1, z2)
 
             # backpropagate through the network
-            neg1 = nnj_module.jTmjp(
+            neg1 = model.jTmjp(
                 x[an],
                 None,
                 H1,
                 wrt="weight",
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
+                to_diag=self.hessian_shape == "diag",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
-            neg2 = nnj_module.jTmjp(
+            neg2 = model.jTmjp(
                 x[n],
                 None,
                 H2,
                 wrt="weight",
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
+                to_diag=self.hessian_shape == "diag",
+                diag_backprop=self.approximation_accuracy == "approx",
             )
             neg = neg1 + neg2
 
