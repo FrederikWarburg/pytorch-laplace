@@ -68,7 +68,7 @@ class DiagLaplace(BaseLaplace):
         with torch.no_grad():
             # forward the mode
             pred_mu = model(x)
-            
+
             # forward the covariance
             pred_sigma = model.jmjTp(
                 x,

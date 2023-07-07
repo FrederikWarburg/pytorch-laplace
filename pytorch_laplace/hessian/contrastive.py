@@ -141,7 +141,7 @@ class ContrastiveHessianCalculator(HessianCalculator):
         x: torch.Tensor,
         model: nnj.Sequential,
         tuple_indices: Tuple,
-        target: Optional[torch.Tensor]=None,
+        target: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         Compute contrastive hessian
@@ -265,7 +265,7 @@ class ArccosHessianCalculator(HessianCalculator):
         x: torch.Tensor,
         model: nnj.Sequential,
         tuple_indices: Tuple,
-        target: Optional[torch.Tensor]=None,
+        target: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         Compute arccos loss
