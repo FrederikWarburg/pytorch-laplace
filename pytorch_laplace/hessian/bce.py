@@ -21,6 +21,11 @@ class BCEHessianCalculator(HessianCalculator):
     ) -> torch.Tensor:
         """
         Computes Binary Cross Entropy
+
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
         """
 
         val = nnj_module(x)
@@ -44,6 +49,11 @@ class BCEHessianCalculator(HessianCalculator):
     ) -> torch.Tensor:
         """
         Computes gradient of the network
+
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
         """
 
         val = nnj_module(x)
@@ -69,6 +79,11 @@ class BCEHessianCalculator(HessianCalculator):
     ) -> torch.Tensor:
         """
         Computes Generalized Gauss-Newton approximation (J^T H J) of the hessian of the network
+
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
         """
 
         val = nnj_module(x)

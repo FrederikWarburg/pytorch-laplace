@@ -7,12 +7,16 @@ from pytorch_laplace.hessian.base import HessianCalculator
 
 
 class CEHessianCalculator(HessianCalculator):
-    "Multi-Class Cross Entropy"
+    """
+    Multi-Class Cross Entropy
 
-    # only support one point prediction (for now)
-    # for example:
-    #       - mnist classification: OK
-    #       - image pixelwise classification: NOT OK
+    .. warning::
+        Currently only support one point prediction (for now)
+        for example:
+            - Classifying mnist digits will work
+            - Pixelwise classification to segment digits will not work
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -26,6 +30,12 @@ class CEHessianCalculator(HessianCalculator):
     ) -> torch.Tensor:
         """
         Computes Cross Entropy
+
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
+            reshape: reshape logits to this shape before computing cross entropy
         """
 
         val = nnj_module(x)
@@ -57,6 +67,12 @@ class CEHessianCalculator(HessianCalculator):
     ) -> torch.Tensor:
         """
         Compute gradient of cross entropy
+
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
+            reshape: reshape logits to this shape before computing cross entropy
         """
         val = nnj_module(x)
         if reshape is not None:
@@ -88,6 +104,12 @@ class CEHessianCalculator(HessianCalculator):
     ) -> torch.Tensor:
         """
         Compute Hessian of cross entropy
+
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
+            reshape: reshape logits to this shape before computing cross entropy
         """
 
         val = nnj_module(x)

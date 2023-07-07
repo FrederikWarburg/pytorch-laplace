@@ -1,4 +1,4 @@
-from typing import Tuple, Union, Literal
+from typing import Literal, Tuple, Union
 
 import nnj
 import torch
@@ -52,13 +52,15 @@ class ContrastiveHessianCalculator(HessianCalculator):
     """
     Contrastive Loss
 
-    L(x,y) = 0.5 * || x - y ||
-    Contrastive(x, tuples) = sum_positives L(x,y) - sum_negatives L(x,y)
+    .. math::
+        L(x,y) = 0.5 * || x - y ||
 
-    Notice that the contrastive loss value is the same for
-        self.method == "full"
-    and
-        self.method == "fix"
+    .. math::
+        Contrastive(x, tuples) = \sum_{positives} L(x,y) - \sum_{negatives} L(x,y)
+
+    .. note::
+        The contrastive loss value is the same for method == "full" and method == "fix", however,
+        the second order derivatives vary.
     """
 
     def __init__(self, method: Literal["full", "fix", "pos"], *args, **kwargs):
@@ -78,8 +80,16 @@ class ContrastiveHessianCalculator(HessianCalculator):
         """
         Compute contrastive loss
 
-        L_{con} = 0.5 * || x - y ||^2
+        .. math::
+            L_{con} = 0.5 * || x - y ||^2
 
+        where :math:`x` and :math:`y` are the embeddings of the anchor and positive/negative samples.
+
+        Args:
+            x: Images of the anchor and positive/negative samples.
+            target: Embeddings of the anchor and positive/negative samples.
+            nnj_module: Neural network module.
+            tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
         """
         # unpack tuple indices
         if len(tuple_indices) == 3:
@@ -114,6 +124,15 @@ class ContrastiveHessianCalculator(HessianCalculator):
         nnj_module: nnj.Sequential,
         tuple_indices: Tuple,
     ) -> torch.Tensor:
+        """
+        Compute contrastive gradient
+
+        Args:
+            x: Images of the anchor and positive/negative samples.
+            target: Embeddings of the anchor and positive/negative samples.
+            nnj_module: Neural network module.
+            tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
+        """
         raise NotImplementedError
 
     @torch.no_grad()
@@ -126,6 +145,12 @@ class ContrastiveHessianCalculator(HessianCalculator):
     ) -> torch.Tensor:
         """
         Compute contrastive hessian
+
+        Args:
+            x: Images of the anchor and positive/negative samples.
+            target: Embeddings of the anchor and positive/negative samples.
+            nnj_module: Neural network module.
+            tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
         """
 
         # unpack tuple indices
@@ -212,17 +237,21 @@ class ContrastiveHessianCalculator(HessianCalculator):
 class ArccosHessianCalculator(HessianCalculator):
     """
     Contrastive Loss with normalization layer included, aka. arccos loss
-    L(x,y) = 0.5 * sum_i x_i * y_i
-          = 0.5 * || x / ||x|| - y / ||y|| || - 1
 
-    arccos distance is equivalent to contrastive distance & normalization layer
+    .. math::
+        L(x,y) = 0.5 * sum_i x_i * y_i
+               = 0.5 * || x / ||x|| - y / ||y|| || - 1
 
-    Arcos(x, tuples) = sum_positives L(x,y) - sum_negatives L(x,y)
+    .. math::
+        Arcos(x, tuples) = \sum_{positives} L(x,y) - \sum_{negatives} L(x,y)
 
-    Notice that the arccos loss value is the same for
-        self.method == "full"
-    and
-        self.method == "fix"
+    .. note::
+        arccos distance is equivalent to contrastive loss if the embeddings live on the l2-sphere,
+        e.g. the last layer of the network is L2-normalization layer
+
+    .. note::
+        The arccos loss value is the same for method == "full" and method == "fix", however,
+        the second order derivatives vary
     """
 
     def __init__(self, **kwargs):
@@ -234,15 +263,29 @@ class ArccosHessianCalculator(HessianCalculator):
     def compute_loss(
         self,
         x: torch.Tensor,
+        target: torch.Tensor,
         nnj_module: nnj.Sequential,
         tuple_indices: Tuple,
     ) -> torch.Tensor:
         """
-        L(x,y) = 0.5 * sum_i x_i * y_i
-               = 0.5 * || x / ||x|| - y / ||y|| || - 1
+        Compute arccos loss
 
-        arccos distance is equivalent to contrastive distance & normalization layer
-        Arcos(x, tuples) = sum_positives L(x,y) - sum_negatives L(x,y)
+        .. math::
+            L(x,y) = 0.5 * sum_i x_i * y_i
+                = 0.5 * || x / ||x|| - y / ||y|| || - 1
+
+        .. math::
+            Arcos(x, tuples) = \sum_{positives} L(x,y) - \sum_{negatives} L(x,y)
+
+        .. note::
+            arccos distance is equivalent to contrastive loss if the embeddings live on the l2-sphere,
+            e.g. the last layer of the network is L2-normalization layer
+
+        Args:
+            x: Images of the anchor and positive/negative samples.
+            target: Embeddings of the anchor and positive/negative samples.
+            nnj_module: Neural network module.
+            tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
         """
 
         # unpack tuple indices
@@ -278,17 +321,33 @@ class ArccosHessianCalculator(HessianCalculator):
         nnj_module: nnj.Sequential,
         tuple_indices: Tuple,
     ) -> torch.Tensor:
+        """
+        Compute the gradient of the loss
+
+        Args:
+            x: Images of the anchor and positive/negative samples.
+            target: Embeddings of the anchor and positive/negative samples.
+            nnj_module: Neural network module.
+            tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
+        """
         raise NotImplementedError
 
     @torch.no_grad()
     def compute_hessian(
         self,
         x: torch.Tensor,
+        target: torch.Tensor,
         nnj_module: nnj.Sequential,
         tuple_indices: Tuple,
     ) -> torch.Tensor:
         """
         Compute the hessian
+
+        Args:
+            x: Images of the anchor and positive/negative samples.
+            target: Embeddings of the anchor and positive/negative samples.
+            nnj_module: Neural network module.
+            tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
         """
         # unpack tuple indices
         if len(tuple_indices) == 3:

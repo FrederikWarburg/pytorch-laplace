@@ -3,7 +3,7 @@ Pytorch-laplace Documentation
 
 Pytorch-laplace provides a simple API for Laplace approximation (LA) in PyTorch. With minimal code changes, you can use it to approximate the posterior of any PyTorch model.
 It supports both Laplace and Linearized Laplace. It uses nnj as backend for approximate hessian computations, which is an order of magnitude faster and more memory efficient than alternatives.
-The repo focuses on LA focues on diagonal hessian approximations, but also supports low-rank hessian approximations such as the kronicker factorization.
+The repo focuses on diagonal hessian approximations, but also supports low-rank hessian approximations such as the kronicker factorization.
 
 Github: https://github.com/FrederikWarburg/pytorch-laplace
 
@@ -34,7 +34,7 @@ Want to learn more about the Laplace approximation?
 ==============================================================
 
 
-Check out our educational content, e.g. start reading our :ref:`Introduction to Laplacet<introduction>`  to learn more about the Laplace approximation.
+Check out our educational content, e.g. start reading our :ref:`Introduction to Laplace<introduction>`  to learn more about the Laplace approximation.
 The document seek to provide a simple introduction to the Laplace approximation and how to use it in PyTorch.
 
 .. toctree::

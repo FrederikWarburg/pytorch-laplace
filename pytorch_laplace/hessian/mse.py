@@ -14,6 +14,11 @@ class MSEHessianCalculator(HessianCalculator):
     def compute_loss(self, x: torch.Tensor, target: torch.Tensor, nnj_module: nnj.Sequential) -> torch.Tensor:
         """
         Computes Mean Square Error
+
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
         """
 
         val = nnj_module(x)
@@ -36,6 +41,11 @@ class MSEHessianCalculator(HessianCalculator):
     ) -> torch.Tensor:
         """
         Computes gradient of the network
+
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
         """
 
         val = nnj_module(x)
@@ -57,8 +67,14 @@ class MSEHessianCalculator(HessianCalculator):
         self, x: torch.Tensor, target: torch.Tensor, nnj_module: nnj.Sequential
     ) -> torch.Tensor:
         """
-        compute Jacobian sandwich of the identity for each element in the batch
+        Compute generalized-gauss newton (GGN) approximation of the Hessian.
+        Jacobian sandwich of the identity for each element in the batch
         H = identity matrix (None is interpreted as identity by jTmjp)
+
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
         """
         val = nnj_module(x)
 
