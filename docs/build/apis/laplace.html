@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="../_static/css/readthedocs.css" type="text/css" />
   <link rel="index" title="Index" href="../genindex.html" />
   <link rel="search" title="Search" href="../search.html" />
-  <link rel="next" title="Utils" href="optimization.html" />
+  <link rel="next" title="Optimization" href="optimization.html" />
   <link rel="prev" title="Hessian Estimators" href="hessian.html" />
   <!-- Google Analytics -->
   <script type="text/javascript">
@@ -142,11 +142,21 @@
         
         
         
-        <p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+        <p class="caption" role="heading"><span class="caption-text">Learn about Laplace</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../laplace/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../laplace/index.html#intuition">Intuition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../laplace/index.html#derivations">Derivations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../laplace/index.html#hessian-approximations">Hessian approximations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../laplace/index.html#sampling-laplace">Sampling (Laplace)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../laplace/index.html#sampling-linearized-laplace">Sampling (Linearized Laplace)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../laplace/index.html#getting-started">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="hessian.html">Hessian Estimators</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Laplace Samplers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="optimization.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization.html">Optimization</a></li>
 </ul>
 
         
@@ -220,12 +230,171 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="pytorch_laplace.DiagLaplace">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pytorch_laplace.</span></span><span class="sig-name descname"><span class="pre">DiagLaplace</span></span><a class="headerlink" href="#pytorch_laplace.DiagLaplace" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.DiagLaplace.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">posterior_scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.DiagLaplace.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample parameters from the posterior distribution of the parameters.</p>
+<div class="math notranslate nohighlight">
+\[samples = parameters + posterior\_scale * epsilon\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> (<em>Tensor</em>) – The parameters of the model.</p></li>
+<li><p><strong>posterior_scale</strong> (<em>Tensor</em>) – The posterior scale of the parameters.</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The number of samples to draw.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.DiagLaplace.posterior_scale">
+<span class="sig-name descname"><span class="pre">posterior_scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hessian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_prec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.DiagLaplace.posterior_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the posterior scale of the parameters.</p>
+<div class="math notranslate nohighlight">
+\[posterior\_scale = 1 / \sqrt{hessian * scale + prior\_prec}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hessian</strong> (<em>Tensor</em>) – The Hessian of the loss function.</p></li>
+<li><p><strong>scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The scale of the posterior distribution.</p></li>
+<li><p><strong>prior_prec</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The precision of the prior distribution.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.DiagLaplace.init_hessian">
+<span class="sig-name descname"><span class="pre">init_hessian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.DiagLaplace.init_hessian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the diagonal Hessian matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The size of the dataset.</p></li>
+<li><p><strong>net</strong> (<em>Sequential</em>) – The neural network.</p></li>
+<li><p><strong>device</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The device to use.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.DiagLaplace.scale">
+<span class="sig-name descname"><span class="pre">scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hessian_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.DiagLaplace.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scales the Hessian approximated from a batch to the full dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hessian_batch</strong> (<em>Tensor</em>) – The Hessian approximated from a batch.</p></li>
+<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The size of the batch.</p></li>
+<li><p><strong>data_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The size of the dataset.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.DiagLaplace.average_hessian_samples">
+<span class="sig-name descname"><span class="pre">average_hessian_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hessian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.DiagLaplace.average_hessian_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Average over the Hessian samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hessian</strong> (<em>Tensor</em>) – The Hessian samples.</p></li>
+<li><p><strong>constant</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.11)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – The constant to multiply the Hessian with.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pytorch_laplace.BlockLaplace">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pytorch_laplace.</span></span><span class="sig-name descname"><span class="pre">BlockLaplace</span></span><a class="headerlink" href="#pytorch_laplace.BlockLaplace" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.BlockLaplace.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">posterior_scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.BlockLaplace.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample parameters from the posterior distribution of the parameters.</p>
+<div class="math notranslate nohighlight">
+\[samples = parameters + posterior\_scale * epsilon\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> (<em>Tensor</em>) – The parameters of the model.</p></li>
+<li><p><strong>posterior_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The posterior scale of the parameters.</p></li>
+<li><p><strong>n_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The number of samples to draw.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.BlockLaplace.posterior_scale">
+<span class="sig-name descname"><span class="pre">posterior_scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hessian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_prec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.BlockLaplace.posterior_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the posterior scale of the parameters.</p>
+<div class="math notranslate nohighlight">
+\[posterior\_scale = 1 / \sqrt{hessian * scale + prior\_prec}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hessian</strong> (<em>Tensor</em>) – The Hessian of the loss function.</p></li>
+<li><p><strong>scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The scale of the posterior distribution.</p></li>
+<li><p><strong>prior_prec</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The precision of the prior distribution.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.BlockLaplace.init_hessian">
+<span class="sig-name descname"><span class="pre">init_hessian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.BlockLaplace.init_hessian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the low-rank Hessian matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The size of the dataset.</p></li>
+<li><p><strong>net</strong> (<em>Sequential</em>) – The neural network.</p></li>
+<li><p><strong>device</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The device to use.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.BlockLaplace.scale">
+<span class="sig-name descname"><span class="pre">scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hessian_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.BlockLaplace.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scales the Hessian approximated from a batch to the full dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hessian_batch</strong> (<em>Tensor</em>) – The Hessian approximated from a batch.</p></li>
+<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The size of the batch.</p></li>
+<li><p><strong>data_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The size of the dataset.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pytorch_laplace.BlockLaplace.aveage_hessian_samples">
+<span class="sig-name descname"><span class="pre">aveage_hessian_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hessian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pytorch_laplace.BlockLaplace.aveage_hessian_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Average the Hessian samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hessian</strong> (<em>Tensor</em>) – The Hessian samples.</p></li>
+<li><p><strong>constant</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.11)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – The constant to multiply the Hessian with.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
 
 </section>
 
@@ -237,7 +406,7 @@
   
   <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
     
-    <a href="optimization.html" class="btn btn-neutral float-right" title="Utils" accesskey="n"
+    <a href="optimization.html" class="btn btn-neutral float-right" title="Optimization" accesskey="n"
       rel="next">Next <img src="../_static/images/chevron-right-blue.svg"
         class="next-page"></a>
     
@@ -273,8 +442,22 @@
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
 <li><a class="reference internal" href="#">Laplace Samplers</a><ul>
-<li><a class="reference internal" href="#pytorch_laplace.DiagLaplace"><code class="docutils literal notranslate"><span class="pre">DiagLaplace</span></code></a></li>
-<li><a class="reference internal" href="#pytorch_laplace.BlockLaplace"><code class="docutils literal notranslate"><span class="pre">BlockLaplace</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.DiagLaplace"><code class="docutils literal notranslate"><span class="pre">DiagLaplace</span></code></a><ul>
+<li><a class="reference internal" href="#pytorch_laplace.DiagLaplace.sample"><code class="docutils literal notranslate"><span class="pre">DiagLaplace.sample()</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.DiagLaplace.posterior_scale"><code class="docutils literal notranslate"><span class="pre">DiagLaplace.posterior_scale()</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.DiagLaplace.init_hessian"><code class="docutils literal notranslate"><span class="pre">DiagLaplace.init_hessian()</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.DiagLaplace.scale"><code class="docutils literal notranslate"><span class="pre">DiagLaplace.scale()</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.DiagLaplace.average_hessian_samples"><code class="docutils literal notranslate"><span class="pre">DiagLaplace.average_hessian_samples()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pytorch_laplace.BlockLaplace"><code class="docutils literal notranslate"><span class="pre">BlockLaplace</span></code></a><ul>
+<li><a class="reference internal" href="#pytorch_laplace.BlockLaplace.sample"><code class="docutils literal notranslate"><span class="pre">BlockLaplace.sample()</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.BlockLaplace.posterior_scale"><code class="docutils literal notranslate"><span class="pre">BlockLaplace.posterior_scale()</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.BlockLaplace.init_hessian"><code class="docutils literal notranslate"><span class="pre">BlockLaplace.init_hessian()</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.BlockLaplace.scale"><code class="docutils literal notranslate"><span class="pre">BlockLaplace.scale()</span></code></a></li>
+<li><a class="reference internal" href="#pytorch_laplace.BlockLaplace.aveage_hessian_samples"><code class="docutils literal notranslate"><span class="pre">BlockLaplace.aveage_hessian_samples()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -299,6 +482,7 @@
   <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
   <script src="../_static/doctools.js"></script>
   <script src="../_static/sphinx_highlight.js"></script>
+  <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   
 
   

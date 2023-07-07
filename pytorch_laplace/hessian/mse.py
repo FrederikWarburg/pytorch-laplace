@@ -1,3 +1,4 @@
+import nnj
 import torch
 
 from pytorch_laplace.hessian.base import HessianCalculator
@@ -6,59 +7,86 @@ from pytorch_laplace.hessian.base import HessianCalculator
 class MSEHessianCalculator(HessianCalculator):
     "Mean Square Error"
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        assert self.method == ""
+    @torch.no_grad()
+    def compute_loss(self, x: torch.Tensor, target: torch.Tensor, nnj_module: nnj.Sequential) -> torch.Tensor:
+        """
+        Computes Mean Square Error
 
-    def compute_loss(self, x, target, nnj_module, tuple_indices=None):
-        with torch.no_grad():
-            val = nnj_module(x)
-            assert val.shape == target.shape
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
+        """
 
-            # compute Gaussian log-likelihood
-            mse = 0.5 * (val - target) ** 2
+        val = nnj_module(x)
+        assert val.shape == target.shape
 
-            # average along batch size
-            mse = torch.mean(mse, dim=0)
+        # compute Gaussian log-likelihood
+        mse = 0.5 * (val - target) ** 2
 
-            # sum along other dimensions
-            mse = torch.sum(mse)
+        # average along batch size
+        mse = torch.mean(mse, dim=0)
 
-            return mse
+        # sum along other dimensions
+        mse = torch.sum(mse)
 
-    def compute_gradient(self, x, target, nnj_module, tuple_indices=None):
-        with torch.no_grad():
-            val = nnj_module(x)
-            assert val.shape == target.shape
+        return mse
 
-            # compute gradient of the Gaussian log-likelihood
-            gradient = val - target
+    @torch.no_grad()
+    def compute_gradient(
+        self, x: torch.Tensor, target: torch.Tensor, nnj_module: nnj.Sequential
+    ) -> torch.Tensor:
+        """
+        Computes gradient of the network
 
-            # backpropagate through the network
-            gradient = gradient.reshape(val.shape[0], -1)
-            gradient = nnj_module.vjp(x, val, gradient, wrt=self.wrt)
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
+        """
 
-            # average along batch size
-            gradient = torch.mean(gradient, dim=0)
-            return gradient
+        val = nnj_module(x)
+        assert val.shape == target.shape
 
-    def compute_hessian(self, x, nnj_module, tuple_indices=None):
-        # compute Jacobian sandwich of the identity for each element in the batch
-        # H = identity matrix (None is interpreted as identity by jTmjp)
+        # compute gradient of the Gaussian log-likelihood
+        gradient = val - target
 
-        with torch.no_grad():
-            val = nnj_module(x)
+        # backpropagate through the network
+        gradient = gradient.reshape(val.shape[0], -1)
+        gradient = nnj_module.vjp(x, val, gradient, wrt="weight")
 
-            # backpropagate through the network
-            Jt_J = nnj_module.jTmjp(
-                x,
-                val,
-                None,
-                wrt=self.wrt,
-                to_diag=self.shape == "diagonal",
-                diag_backprop=self.speed == "fast",
-            )
-            # average along batch size
-            Jt_J = torch.mean(Jt_J, dim=0)
-            return Jt_J
+        # average along batch size
+        gradient = torch.mean(gradient, dim=0)
+        return gradient
+
+    @torch.no_grad()
+    def compute_hessian(
+        self, x: torch.Tensor, target: torch.Tensor, nnj_module: nnj.Sequential
+    ) -> torch.Tensor:
+        """
+        Compute generalized-gauss newton (GGN) approximation of the Hessian.
+        Jacobian sandwich of the identity for each element in the batch
+        H = identity matrix (None is interpreted as identity by jTmjp)
+
+        Args:
+            x: input of the network
+            target: output of the network
+            nnj_module: neural network module
+        """
+        val = nnj_module(x)
+
+        # backpropagate through the network
+        Jt_J = nnj_module.jTmjp(
+            x,
+            val,
+            None,
+            wrt="weight",
+            to_diag=self.shape == "diagonal",
+            diag_backprop=self.speed == "fast",
+        )
+        # average along batch size
+        Jt_J = torch.mean(Jt_J, dim=0)
+        return Jt_J

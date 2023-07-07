@@ -21,6 +21,7 @@ dependencies = [
     "sphinx",
     "sphinx_rtd_theme",
     "torch>=1.13.1",
+    "nnj@git+https://github.com/IlMioFrizzantinoAmabile/nnj",
 ]
 
 [tool.setuptools.packages.find]
