@@ -300,9 +300,11 @@ without relying on samples (single forward pass). The main disadvantage of NNJ i
 <span class="n">model</span> <span class="o">=</span> <span class="n">nnj</span><span class="o">.</span><span class="n">convert_to_nnj</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
 <span class="c1"># define HessianCalculator</span>
+<span class="c1"># this class assumes you are using MSE loss</span>
+<span class="c1"># to train your network.</span>
 <span class="n">hessian_calculator</span> <span class="o">=</span> <span class="n">nnj</span><span class="o">.</span><span class="n">MSEHessianCalculator</span><span class="p">(</span>
-  <span class="n">approximation</span><span class="o">=</span><span class="s2">&quot;diagonal&quot;</span><span class="p">,</span> <span class="c1"># better name</span>
-  <span class="n">approximation2</span><span class="o">=</span><span class="s2">&quot;diagonal&quot;</span><span class="p">,</span> <span class="c1"># better name</span>
+  <span class="n">hessian_shape</span><span class="o">=</span><span class="s2">&quot;diag&quot;</span><span class="p">,</span> <span class="c1"># uses a diagonal approximation of the GGN</span>
+  <span class="n">approximation_accuracy</span><span class="o">=</span><span class="s2">&quot;exact&quot;</span><span class="p">,</span> <span class="c1"># alternatively choose &quot;approx&quot;, which scale linearly with the output dimension, rather than quadratically</span>
 <span class="p">)</span>
 
 <span class="c1"># initialize hessian</span>
@@ -310,9 +312,7 @@ without relying on samples (single forward pass). The main disadvantage of NNJ i
 <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
     <span class="c1"># compute hessian</span>
     <span class="n">hessian</span> <span class="o">+=</span> <span class="n">hessian_calculator</span><span class="p">(</span>
-      <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
-      <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
-      <span class="n">nnj_module</span><span class="o">=</span><span class="n">model</span>
+      <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">nnj_module</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
     <span class="p">)</span>
 </pre></div>
 </div>
@@ -337,7 +337,6 @@ p(y \mid \boldsymbol{x}, \mathcal{D}) &amp;=\int p(y \mid \boldsymbol{x}, \bolds
     <span class="c1"># get predictive distribution</span>
     <span class="n">pred_mu</span><span class="p">,</span> <span class="n">pred_sigma</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">laplace</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
-        <span class="n">target</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
         <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
         <span class="n">hessian</span><span class="o">=</span><span class="n">hessian</span><span class="p">,</span>
         <span class="n">prior_precision</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
@@ -350,9 +349,44 @@ p(y \mid \boldsymbol{x}, \mathcal{D}) &amp;=\int p(y \mid \boldsymbol{x}, \bolds
 </section>
 <section id="sampling-linearized-laplace">
 <h1>Sampling (Linearized Laplace)<a class="headerlink" href="#sampling-linearized-laplace" title="Permalink to this heading">¶</a></h1>
+<p>The Linerzied Laplace allows you to get the distribution of your predictions <strong>without sampling!</strong>.</p>
+<div class="math notranslate nohighlight">
+\[add math\]</div>
+<p>In code, we provide the high level API:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define dataloader</span>
+<span class="n">test_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">()</span>
+
+<span class="c1"># Compute the posterior</span>
+<span class="n">sampler</span> <span class="o">=</span> <span class="n">DiagLaplace</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;nnj&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="p">:</span>
+
+    <span class="c1"># get predictive distribution</span>
+    <span class="n">pred_mu</span><span class="p">,</span> <span class="n">pred_sigma</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">linearized_laplace</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">hessian</span><span class="o">=</span><span class="n">hessian</span><span class="p">,</span>
+        <span class="n">prior_precision</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda:0&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h1>
+<p>We provide several simple you examples to get started with the library.
+Please see the example folder, where we provide examples for toy problems, such as:</p>
+<ul class="simple">
+<li><p>Laplace and Linearized Laplace for sinousoidal regression</p></li>
+<li><p>Laplace and Linearized Laplace for MNIST classification</p></li>
+</ul>
+<p>And implement state of the art methods such as:</p>
+<ul class="simple">
+<li><p>Laplacian Autoencoders for Learning Stochastic Representations</p></li>
+<li><p>Bayesian Metric Learning for Uncertainty Quantification in Image Retrieval</p></li>
+<li><p>Laplacian Segmentation Networks: Improved Epistemic Uncertainty from Spatial Aleatoric Uncertainty</p></li>
+</ul>
 </section>
 
 

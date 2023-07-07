@@ -109,9 +109,11 @@ We can get the hessian of the loss w.r.t. the parameters as follows:
     model = nnj.convert_to_nnj(model)
 
     # define HessianCalculator
+    # this class assumes you are using MSE loss
+    # to train your network.
     hessian_calculator = nnj.MSEHessianCalculator(
-      approximation="diagonal", # better name
-      approximation2="diagonal", # better name
+      hessian_shape="diag", # uses a diagonal approximation of the GGN
+      approximation_accuracy="exact", # alternatively choose "approx", which scales linearly with the output dimension, rather than quadratically
     )
 
     # initialize hessian
@@ -119,9 +121,7 @@ We can get the hessian of the loss w.r.t. the parameters as follows:
     for x, y in train_loader:
         # compute hessian
         hessian += hessian_calculator(
-          x=x, 
-          y=y, 
-          nnj_module=model
+          x=x, nnj_module=model,
         )
 
 Sampling (Laplace)
@@ -159,13 +159,49 @@ where :math:`K` is the number of samples. In code, this can be implemented as fo
         )
 
 
-
-
 Sampling (Linearized Laplace)
 ===================================
 
+The Linerzied Laplace allows you to get the distribution of your predictions **without sampling!**.
 
+.. math::
+    add math
+
+In code, we provide the high level API:
+
+
+.. code-block:: python
+
+    # define dataloader
+    test_loader = torch.utils.data.DataLoader()
+
+    # Compute the posterior
+    sampler = DiagLaplace(backend="nnj")
+
+    for x, y in test_loader:
+
+        # get predictive distribution
+        pred_mu, pred_sigma = sampler.linearized_laplace(
+            x=x,
+            model=model,
+            hessian=hessian,
+            prior_precision=1.0,
+            scale=1.0,
+            device="cuda:0",
+        )
 
 
 Getting Started
 ===================================
+
+We provide several simple you examples to get started with the library.
+Please see the example folder, where we provide examples for toy problems, such as:
+
+* Laplace and Linearized Laplace for sinousoidal regression
+* Laplace and Linearized Laplace for MNIST classification
+
+And implement state of the art methods such as:
+
+* Laplacian Autoencoders for Learning Stochastic Representations
+* Bayesian Metric Learning for Uncertainty Quantification in Image Retrieval
+* Laplacian Segmentation Networks: Improved Epistemic Uncertainty from Spatial Aleatoric Uncertainty

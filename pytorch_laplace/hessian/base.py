@@ -9,14 +9,14 @@ from torch import nn
 class HessianCalculator(ABC, nn.Module):
     def __init__(
         self,
-        shape: Literal["full", "block", "diagonal"] = "diagonal",
-        speed: Literal["half", "fast"] = "half",
+        hessian_shape: Literal["full", "block", "diag"] = "diag",
+        approximation_accuracy: Literal["exact", "approx"] = "exact",
         *args,
         **kwargs,
     ) -> None:
         super().__init__()
 
-        assert shape in ("full", "block", "diagonal")  # TODO: better name
+        assert shape in ("full", "block", "diag")  # TODO: better name
         assert speed in ("half", "fast")  # TODO: better name
 
         self.shape = shape
