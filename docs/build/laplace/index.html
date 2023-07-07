@@ -234,15 +234,119 @@ In this document, we will explain the Laplace approximation and how to use it in
 </section>
 <section id="intuition">
 <h1>Intuition<a class="headerlink" href="#intuition" title="Permalink to this heading">¶</a></h1>
+<video autoplay="True" loop="True" muted="True" preload="auto" width="800"><source src="../_static/images/laplace-intuition.mp4" type="video/mp4">Laplace approximation intuition</video><p>The figure above shows the loss (or negative log likelihood) for two parameters in a neural network.
+After training, the parameters have converged to a local minimum of the loss, illustrated by the blue star <span class="math notranslate nohighlight">\(\theta^*\)</span>.
+If a parameter is in a steep valley, changing it a little bit will increase the loss a lot.
+This means that we are fairly certain about the specific value of the parameter. On the other hand,
+if a paramter is in a flat valley, changing it a little bit will not increase the loss a lot. Thus,
+we are uncertain about the specific value of the parameter.</p>
+<p>The steepness of the valley is determined by the second derivative of the loss, also called the Hessian.
+Thus, the inverse of the Hessian determines the uncertainty of the parameters. In the following,
+we will derive the Laplace approximation and show that it correspond to assuming a Gaussian distribution
+over the parameters (Gaussian weight-posterior).</p>
 </section>
 <section id="derivations">
 <h1>Derivations<a class="headerlink" href="#derivations" title="Permalink to this heading">¶</a></h1>
+<p>Laplace approximations (LA) can be applied for every
+loss function :math: <cite>mathcal{L}</cite> that can be interpreted as an unnormalized
+log-posterior by performing a second-order Taylor expansion around a chosen weight vector <span class="math notranslate nohighlight">\(\theta^*\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\log p(\boldsymbol{\theta} \mid \mathcal{D})=\mathcal{L}^*+\left(\boldsymbol{\theta}-\boldsymbol{\theta}^*\right)^{\top} \nabla \mathcal{L}^*+\frac{1}{2}\left(\boldsymbol{\theta}-\boldsymbol{\theta}^*\right)^{\top} \nabla^2 \mathcal{L}^*\left(\boldsymbol{\theta}-\boldsymbol{\theta}^*\right)+\mathcal{O}\left(\left\|\boldsymbol{\theta}-\boldsymbol{\theta}^*\right\|^3\right)\]</div>
+<p>Imposing the unnormalized log-posterior to be a second-order polynomial is equivalent to
+assuming the posterior to be Gaussian.</p>
+<p>If <span class="math notranslate nohighlight">\(\theta^*\)</span> is the maximum a posteriori (MAP) estimate, a common assumption is that the gradient is zero,
+such that the first-order term in the Taylor expansion vanishes, and the Taylor expansion simplifies to:</p>
+<div class="math notranslate nohighlight">
+\[\begin{aligned}
+\mathcal{L}(\theta) \approx &amp; \mathcal{L}^*+\frac{1}{2}\left(\theta-\theta^*\right)^{\top} \nabla^2 \mathcal{L}^*\left(\theta-\theta^*\right)
+\end{aligned}\]</div>
+<p>For common loss functions, such as the MSE and Cross-Entropy loss, the Hessian is positive definite,
+and thus, we can write the weight posterior as:</p>
+<div class="math notranslate nohighlight">
+\[\begin{aligned}
+p(\theta \mid \mathcal{D})=\mathcal{N}\left(\theta \mid \theta^*,\left(\nabla_\theta^2 \mathcal{L}_{\text {con }}\left(\theta^* ; \mathcal{D}\right)+\sigma_{\text {prior }}^{-2} \mathbb{I}\right)^{-1}\right)
+\end{aligned}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathcal{N}\)</span> denotes the Gaussian distribution.</p>
 </section>
 <section id="hessian-approximations">
 <h1>Hessian approximations<a class="headerlink" href="#hessian-approximations" title="Permalink to this heading">¶</a></h1>
+<p>The main challenge of the Laplace approximation is to compute the Hessian of
+the neural network with respect to the parameters <span class="math notranslate nohighlight">\(\nabla_\theta^2\)</span> and inverting this,
+as it is very computationally expensive. Therefore, there has been proposed several
+approximations to the Hessian. In the following, we will describe the most common.</p>
+<p>The Hessian is commonly approximiation with the <strong>Generalized Gauss-Newton</strong> approximation:</p>
+<div class="math notranslate nohighlight">
+\[\nabla_{\boldsymbol{\theta}^{(l)}}^2 \mathcal{L}\left(f_{\boldsymbol{\theta}}(\boldsymbol{x})\right) \approx J_{\boldsymbol{\theta}^{(l)}} f_{\boldsymbol{\theta}}(\boldsymbol{x})^{\top} \cdot \nabla_{\boldsymbol{\hat{y}}}^2 \mathcal{L}\left(\boldsymbol{\hat{y}}\right) \cdot J_{\boldsymbol{\theta}^{(l)}} f_{\boldsymbol{\theta}}(\boldsymbol{x}),\]</div>
+<p>for a single layer <span class="math notranslate nohighlight">\(l\)</span>, which neglects second order derivatives of <span class="math notranslate nohighlight">\(f\)</span> w.r.t. the parameters.
+Besides, the computational benefits of this approximations, the GGN also ensures that the Hessian is semi-positive definite.</p>
+<p>Another common approximation is the <strong>diagonal</strong> approximation, which is the diagonal of the Hessian.
+This ensures that the models scales linearly with the number of parameters, rather than quadratically.</p>
+<p>There exists several pytorch backends that supports, efficient computation of the Hessian, such as</p>
+<ul class="simple">
+<li><p>NNJ (which efficiently implements jacobian-vector and jacobina-matrix products)</p></li>
+<li><p>Backpack (which extends pytorch autograd with (approximate) second order derivatives)</p></li>
+<li><p>ASDL (which is similar to Backpack)</p></li>
+</ul>
+<p>This repo supports all backends, but focuses on the NNJ, because it is an order of magnitude faster and more memory efficient
+than the other backends. NNJ does not replies on autograd, but instead uses a custom PyTorch jacobian-vector products,
+which are more efficient for approximate second-order methods. Furthermore, NNJ allows to scale the laplace approximation
+to large neural networks with large input, which is not possible with the other backends. NNJ also allows to compute linearized laplace
+without relying on samples (single forward pass). The main disadvantage of NNJ is that it requires the user to implement jacobian of layers.</p>
+<p>We can get the hessian of the loss w.r.t. the parameters as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define data loader</span>
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">()</span>
+
+<span class="c1"># define model (convert torch.Sequential to nnj.Sequential)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">nnj</span><span class="o">.</span><span class="n">convert_to_nnj</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># define HessianCalculator</span>
+<span class="n">hessian_calculator</span> <span class="o">=</span> <span class="n">nnj</span><span class="o">.</span><span class="n">MSEHessianCalculator</span><span class="p">(</span>
+  <span class="n">approximation</span><span class="o">=</span><span class="s2">&quot;diagonal&quot;</span><span class="p">,</span> <span class="c1"># better name</span>
+  <span class="n">approximation2</span><span class="o">=</span><span class="s2">&quot;diagonal&quot;</span><span class="p">,</span> <span class="c1"># better name</span>
+<span class="p">)</span>
+
+<span class="c1"># initialize hessian</span>
+<span class="n">hessian</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+    <span class="c1"># compute hessian</span>
+    <span class="n">hessian</span> <span class="o">+=</span> <span class="n">hessian_calculator</span><span class="p">(</span>
+      <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+      <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+      <span class="n">nnj_module</span><span class="o">=</span><span class="n">model</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="sampling-laplace">
 <h1>Sampling (Laplace)<a class="headerlink" href="#sampling-laplace" title="Permalink to this heading">¶</a></h1>
+<p>Once, we have a weight-posterior (a distribution of weights), we can sample from it to obtain a distribution of predictions.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+p(y \mid \boldsymbol{x}, \mathcal{D}) &amp;=\int p(y \mid \boldsymbol{x}, \boldsymbol{\theta}) p(\boldsymbol{\theta} \mid \mathcal{D}) d \boldsymbol{\theta} \\
+&amp; \approx \frac{1}{K} \sum_{k=1}^{K} p(y \mid \boldsymbol{x}, \boldsymbol{\theta}^{(k)}), \quad \boldsymbol{\theta}^{(k)} \sim p(\boldsymbol{\theta} \mid \mathcal{D})
+\end{aligned}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(K\)</span> is the number of samples. In code, this can be implemented as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define dataloader</span>
+<span class="n">test_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">()</span>
+
+<span class="c1"># Compute the posterior</span>
+<span class="n">sampler</span> <span class="o">=</span> <span class="n">DiagLaplace</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;nnj&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="p">:</span>
+
+    <span class="c1"># get predictive distribution</span>
+    <span class="n">pred_mu</span><span class="p">,</span> <span class="n">pred_sigma</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">laplace</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">hessian</span><span class="o">=</span><span class="n">hessian</span><span class="p">,</span>
+        <span class="n">prior_precision</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">num_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda:0&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="sampling-linearized-laplace">
 <h1>Sampling (Linearized Laplace)<a class="headerlink" href="#sampling-linearized-laplace" title="Permalink to this heading">¶</a></h1>
@@ -323,6 +427,7 @@ In this document, we will explain the Laplace approximation and how to use it in
   <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
   <script src="../_static/doctools.js"></script>
   <script src="../_static/sphinx_highlight.js"></script>
+  <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   
 
   

@@ -20,6 +20,7 @@ dependencies = [
     "pyright",
     "sphinx",
     "sphinx_rtd_theme",
+    "sphinxcontrib-video",
     "torch>=1.13.1",
     "nnj@git+https://github.com/IlMioFrizzantinoAmabile/nnj",
 ]
