@@ -12,3 +12,7 @@ Laplace Samplers
 
 .. autoclass:: BlockLaplace
     :members:
+
+.. autoclass:: OnlineBlockLaplace
+    :members:
+

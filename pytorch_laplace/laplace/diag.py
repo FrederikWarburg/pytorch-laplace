@@ -23,13 +23,11 @@ class DiagLaplace(BaseLaplace):
 
         Args:
             x: The input data.
-            y: The target data.
+            hessian: The Hessian of the loss function.
             model: The neural network.
             prior_prec: The precision of the prior distribution.
             n_samples: The number of samples to draw.
             scale: The scale of the posterior distribution.
-            device
-
         """
 
         sigma_q = self.posterior_scale(hessian=hessian, scale=scale, prior_prec=prior_prec)
