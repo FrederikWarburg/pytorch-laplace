@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import Literal, Optional
 
 import nnj
 import torch
+from backpack import extend
+from torch import nn
 
 from pytorch_laplace.hessian.base import HessianCalculator
 
@@ -12,62 +14,15 @@ class MSEHessianCalculator(HessianCalculator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @torch.no_grad()
-    def compute_loss(self, x: torch.Tensor, target: torch.Tensor, model: nnj.Sequential) -> torch.Tensor:
-        """
-        Computes Mean Square Error
-
-        Args:
-            x: input of the network
-            target: output of the network
-            model: neural network module
-        """
-
-        val = model(x)
-        assert val.shape == target.shape
-
-        # compute Gaussian log-likelihood
-        mse = 0.5 * (val - target) ** 2
-
-        # average along batch size
-        mse = torch.mean(mse, dim=0)
-
-        # sum along other dimensions
-        mse = torch.sum(mse)
-
-        return mse
+        self.lossfunc = extend(nn.MSELoss())
 
     @torch.no_grad()
-    def compute_gradient(self, x: torch.Tensor, target: torch.Tensor, model: nnj.Sequential) -> torch.Tensor:
-        """
-        Computes gradient of the network
-
-        Args:
-            x: input of the network
-            target: output of the network
-            model: neural network module
-        """
-
-        val = model(x)
-        assert val.shape == target.shape
-
-        # compute gradient of the Gaussian log-likelihood
-        gradient = val - target
-
-        # backpropagate through the network
-        gradient = gradient.reshape(val.shape[0], -1)
-        gradient = model.vjp(x, val, gradient, wrt="weight")
-
-        # average along batch size
-        gradient = torch.mean(gradient, dim=0)
-        return gradient
-
-    @torch.no_grad()
-    def compute_hessian(
+    def _compute_hessian_nnj(
         self, x: torch.Tensor, model: nnj.Sequential, target: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Compute generalized-gauss newton (GGN) approximation of the Hessian.
+        Compute generalized-gauss newton (GGN) approximation of the Hessian
+        using the nnj backend.
         Jacobian sandwich of the identity for each element in the batch
         H = identity matrix (None is interpreted as identity by jTmjp)
 
@@ -79,14 +34,14 @@ class MSEHessianCalculator(HessianCalculator):
         val = model(x)
 
         # backpropagate through the network
-        Jt_J = model.jTmjp(
+        dggn = model.jTmjp(
             x,
             val,
-            None,
+            None,  # none is interpreted as identity matrix
             wrt="weight",
             to_diag=self.hessian_shape == "diag",
             diag_backprop=self.approximation_accuracy == "approx",
         )
         # average along batch size
-        Jt_J = torch.mean(Jt_J, dim=0)
-        return Jt_J
+        dggn = torch.mean(dggn, dim=0)
+        return dggn

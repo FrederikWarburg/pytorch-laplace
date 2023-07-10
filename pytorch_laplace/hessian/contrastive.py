@@ -6,15 +6,6 @@ import torch
 from pytorch_laplace.hessian.base import HessianCalculator
 
 
-def _arccos(z1: torch.Tensor, z2: torch.Tensor):
-    """
-    TODO: docstring
-    """
-    z1_norm = torch.sum(z1**2, dim=1) ** (0.5)
-    z2_norm = torch.sum(z2**2, dim=1) ** (0.5)
-    return 0.5 * torch.einsum("bi,bi->b", z1, z2) / (z1_norm * z2_norm)
-
-
 def _arccos_hessian(z1: torch.Tensor, z2: torch.Tensor):
     """
     TODO: docstring
@@ -70,73 +61,7 @@ class ContrastiveHessianCalculator(HessianCalculator):
         assert self.method in ("full", "fix", "pos")
 
     @torch.no_grad()
-    def compute_loss(
-        self,
-        x: torch.Tensor,
-        target: torch.Tensor,
-        model: nnj.Sequential,
-        tuple_indices: Tuple,
-    ) -> torch.Tensor:
-        """
-        Compute contrastive loss
-
-        .. math::
-            L_{con} = 0.5 * || x - y ||^2
-
-        where :math:`x` and :math:`y` are the embeddings of the anchor and positive/negative samples.
-
-        Args:
-            x: Images of the anchor and positive/negative samples.
-            target: Embeddings of the anchor and positive/negative samples.
-            model: Neural network module.
-            tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
-        """
-        # unpack tuple indices
-        if len(tuple_indices) == 3:
-            a, p, n = tuple_indices
-            ap = an = a
-        else:
-            ap, p, an, n = tuple_indices
-        assert len(ap) == len(p) and len(an) == len(n)
-
-        # compute positive part
-        pos = 0.5 * (model(x[ap]) - model(x[p])) ** 2
-
-        # sum along batch size
-        pos = torch.sum(pos, dim=0)
-
-        if self.method == "pos":
-            return pos
-
-        # compute negative part
-        neg = 0.5 * (model(x[an]) - model(x[n])) ** 2
-
-        # sum along batch size
-        neg = torch.sum(neg, dim=0)
-
-        return pos - neg
-
-    @torch.no_grad()
-    def compute_gradient(
-        self,
-        x: torch.Tensor,
-        target: torch.Tensor,
-        model: nnj.Sequential,
-        tuple_indices: Tuple,
-    ) -> torch.Tensor:
-        """
-        Compute contrastive gradient
-
-        Args:
-            x: Images of the anchor and positive/negative samples.
-            target: Embeddings of the anchor and positive/negative samples.
-            model: Neural network module.
-            tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
-        """
-        raise NotImplementedError
-
-    @torch.no_grad()
-    def compute_hessian(
+    def _compute_hessian_nnj(
         self,
         x: torch.Tensor,
         model: nnj.Sequential,
@@ -260,80 +185,7 @@ class ArccosHessianCalculator(HessianCalculator):
         assert self.method in ("full", "fix", "pos")
 
     @torch.no_grad()
-    def compute_loss(
-        self,
-        x: torch.Tensor,
-        model: nnj.Sequential,
-        tuple_indices: Tuple,
-        target: Optional[torch.Tensor] = None,
-    ) -> torch.Tensor:
-        """
-        Compute arccos loss
-
-        .. math::
-            L(x,y) = 0.5 * sum_i x_i * y_i
-                = 0.5 * || x / ||x|| - y / ||y|| || - 1
-
-        .. math::
-            Arcos(x, tuples) = \sum_{positives} L(x,y) - \sum_{negatives} L(x,y)
-
-        .. note::
-            arccos distance is equivalent to contrastive loss if the embeddings live on the l2-sphere,
-            e.g. the last layer of the network is L2-normalization layer
-
-        Args:
-            x: Images of the anchor and positive/negative samples.
-            target: Embeddings of the anchor and positive/negative samples.
-            model: Neural network module.
-            tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
-        """
-
-        # unpack tuple indices
-        if len(tuple_indices) == 3:
-            a, p, n = tuple_indices
-            ap = an = a
-        else:
-            ap, p, an, n = tuple_indices
-        assert len(ap) == len(p) and len(an) == len(n)
-
-        # compute positive part
-        pos = _arccos(model(x[ap]), model(x[p]))
-
-        # sum along batch size
-        pos = torch.sum(pos, dim=0)
-
-        if self.method == "pos":
-            return pos
-
-        # compute negative part
-        neg = _arccos(model(x[an]), model(x[n]))
-
-        # sum along batch size
-        neg = torch.sum(neg, dim=0)
-
-        return pos - neg
-
-    @torch.no_grad()
-    def compute_gradient(
-        self,
-        x: torch.Tensor,
-        target: torch.Tensor,
-        model: nnj.Sequential,
-        tuple_indices: Tuple,
-    ) -> torch.Tensor:
-        """
-        Compute the gradient of the loss
-
-        Args:
-            x: Images of the anchor and positive/negative samples.
-            target: Embeddings of the anchor and positive/negative samples.
-            model: Neural network module.
-            tuple_indices: Tuple indices, either (a,p,n) or (a,p,a,n).
-        """
-        raise NotImplementedError
-
-    @torch.no_grad()
-    def compute_hessian(
+    def _compute_hessian_nnj(
         self,
         x: torch.Tensor,
         target: torch.Tensor,

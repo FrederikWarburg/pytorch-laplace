@@ -23,6 +23,7 @@ dependencies = [
     "sphinxcontrib-video",
     "torch>=1.13.1",
     "nnj@git+https://github.com/IlMioFrizzantinoAmabile/nnj",
+    "backpack-for-pytorch",
 ]
 
 [tool.setuptools.packages.find]

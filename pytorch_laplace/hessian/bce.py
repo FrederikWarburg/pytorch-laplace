@@ -2,6 +2,8 @@ from typing import Optional
 
 import nnj
 import torch
+from backpack import extend
+from torch import nn
 
 from pytorch_laplace.hessian.base import HessianCalculator
 
@@ -12,66 +14,10 @@ class BCEHessianCalculator(HessianCalculator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @torch.no_grad()
-    def compute_loss(
-        self,
-        x: torch.Tensor,
-        target: torch.Tensor,
-        model: nnj.Sequential,
-    ) -> torch.Tensor:
-        """
-        Computes Binary Cross Entropy
-
-        Args:
-            x: input of the network
-            target: output of the network
-            model: neural network module
-        """
-
-        val = model(x)
-        assert val.shape == target.shape
-
-        bernoulli_p = torch.exp(val) / (1 + torch.exp(val))
-        cross_entropy = -(target * torch.log(bernoulli_p) + (1 - target) * torch.log(1 - bernoulli_p))
-
-        # average along batch size
-        cross_entropy = torch.mean(cross_entropy, dim=0)
-        # sum along other dimensions
-        cross_entropy = torch.sum(cross_entropy)
-        return cross_entropy
+        self.lossfunc = extend(nn.BCEWithLogitsLoss())
 
     @torch.no_grad()
-    def compute_gradient(
-        self,
-        x: torch.Tensor,
-        target: torch.Tensor,
-        model: nnj.Sequential,
-    ) -> torch.Tensor:
-        """
-        Computes gradient of the network
-
-        Args:
-            x: input of the network
-            target: output of the network
-            model: neural network module
-        """
-
-        val = model(x)
-        assert val.shape == target.shape
-
-        bernoulli_p = torch.exp(val) / (1 + torch.exp(val))
-        gradient = bernoulli_p - target
-
-        # backpropagate through the network
-        gradient = gradient.reshape(val.shape[0], -1)
-        gradient = model._vjp(x, val, gradient, wrt="weight")
-
-        # average along batch size
-        gradient = torch.mean(gradient, dim=0)
-        return gradient
-
-    @torch.no_grad()
-    def compute_hessian(
+    def _compute_hessian_nnj(
         self,
         x: torch.Tensor,
         target: Optional[torch.Tensor],

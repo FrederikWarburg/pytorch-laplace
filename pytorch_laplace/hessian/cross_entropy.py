@@ -2,6 +2,8 @@ from typing import Optional, Tuple
 
 import nnj
 import torch
+from backpack import extend
+from torch import nn
 
 from pytorch_laplace.hessian.base import HessianCalculator
 
@@ -20,81 +22,10 @@ class CEHessianCalculator(HessianCalculator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @torch.no_grad()
-    def compute_loss(
-        self,
-        x: torch.Tensor,
-        target: torch.Tensor,
-        model: nnj.Sequential,
-        reshape: Optional[Tuple] = None,
-    ) -> torch.Tensor:
-        """
-        Computes Cross Entropy
-
-        Args:
-            x: input of the network
-            target: output of the network
-            model: neural network module
-            reshape: reshape logits to this shape before computing cross entropy
-        """
-
-        val = model(x)
-        if reshape is not None:
-            val = val.reshape(val.shape[0], *reshape)
-        assert val.shape == target.shape
-        if len(val.shape) != 2 and len(val.shape) != 3:
-            raise ValueError("Ei I need logits to be either 1d or 2d tensors (+ batch size)")
-
-        log_normalization = torch.log(torch.sum(torch.exp(val), dim=-1)).unsqueeze(-1).expand(val.shape)
-        cross_entropy = -(target * val) + log_normalization
-        # print(torch.sum(log_normalization), torch.sum(target * val))
-        cross_entropy = torch.sum(cross_entropy, dim=-1)
-
-        # average along multiple points (if any)
-        if len(val.shape) == 3:
-            cross_entropy = torch.mean(cross_entropy, dim=1)
-        # average along batch size
-        cross_entropy = torch.mean(cross_entropy, dim=0)
-        return cross_entropy
+        self.lossfunc = extend(nn.CrossEntropyLoss())
 
     @torch.no_grad()
-    def compute_gradient(
-        self,
-        x: torch.Tensor,
-        target: torch.Tensor,
-        model: nnj.Sequential,
-        reshape: Optional[Tuple] = None,
-    ) -> torch.Tensor:
-        """
-        Compute gradient of cross entropy
-
-        Args:
-            x: input of the network
-            target: output of the network
-            model: neural network module
-            reshape: reshape logits to this shape before computing cross entropy
-        """
-        val = model(x)
-        if reshape is not None:
-            val = val.reshape(val.shape[0], *reshape)
-        assert val.shape == target.shape
-
-        exp_val = torch.exp(val)
-        softmax = torch.einsum("b...i,b...->b...i", exp_val, 1.0 / torch.sum(exp_val, dim=-1))
-
-        # compute gradient of the Bernoulli log-likelihood
-        gradient = softmax - target
-
-        # backpropagate through the network
-        gradient = gradient.reshape(val.shape[0], -1)
-        gradient = model.vjp(x, val, gradient, wrt="weight")
-
-        # average along batch size
-        gradient = torch.mean(gradient, dim=0)
-        return gradient
-
-    @torch.no_grad()
-    def compute_hessian(
+    def _compute_hessian_nnj(
         self,
         x: torch.Tensor,
         model: nnj.Sequential,
