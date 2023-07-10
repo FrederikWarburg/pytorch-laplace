@@ -4,8 +4,8 @@ Introduction
 ===================================
 
 The Laplace approximation (McKay, 1992) is a method to quantify the uncertainty of a neural network.
-It is based on the assumption that the posterior distribution of the weights of a neural network is Gaussian.
-The Laplace approximation is a fast and simple method to approximate the posterior distribution of the weights of a neural network.
+It assumes that the weights of a neural network follows a Gaussian distribution (Gaussian weight-posterior), which 
+is estimated using the curvature of the loss landscape. 
 In this document, we will explain the Laplace approximation and how to use it in the context of Bayesian neural networks.
 
 
@@ -87,9 +87,9 @@ This ensures that the models scales linearly with the number of parameters, rath
 
 There exists several pytorch backends that supports, efficient computation of the Hessian, such as
 
-* NNJ (which efficiently implements jacobian-vector and jacobina-matrix products)
-* Backpack (which extends pytorch autograd with (approximate) second order derivatives)
-* ASDL (which is similar to Backpack)
+* NNJ (efficiently implements jacobian-vector and jacobina-matrix products)
+* Backpack (extends pytorch autograd with (approximate) second order derivatives)
+* ASDL (similar to Backpack)
 
 
 This repo supports all backends, but focuses on the NNJ, because it is an order of magnitude faster and more memory efficient
@@ -155,7 +155,6 @@ where :math:`K` is the number of samples. In code, this can be implemented as fo
             prior_precision=1.0,
             scale=1.0,
             num_samples=100,
-            device="cuda:0",
         )
 
 
@@ -187,14 +186,13 @@ In code, we provide the high level API:
             hessian=hessian,
             prior_precision=1.0,
             scale=1.0,
-            device="cuda:0",
         )
 
 
 Getting Started
 ===================================
 
-We provide several simple you examples to get started with the library.
+We provide several simple examples for you to get started with the library.
 Please see the example folder, where we provide examples for toy problems, such as:
 
 * Laplace and Linearized Laplace for sinousoidal regression

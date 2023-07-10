@@ -72,11 +72,36 @@ Usage
    )
 
 
-   # fit hessian
-   hessian = fit_hessian(network_nnj, train_loader, device)
+    # define HessianCalculator
+    # this class assumes you are using MSE loss
+    # to train your network.
+    hessian_calculator = nnj.MSEHessianCalculator(
+      hessian_shape="diag", # uses a diagonal approximation of the GGN
+      approximation_accuracy="exact", # alternatively choose "approx", which scales linearly with the output dimension, rather than quadratically
+    )
 
-   # sample from the posterior
-   pred_mu, pred_sigma = sample_laplace(network_nnj, hessian, test_loader, device, n_samples=100)
+    # initialize hessian
+    hessian = torch.zeros_like(model.parameters())
+    for x, y in train_loader:
+        # compute hessian approximation
+        hessian += hessian_calculator.compute_hessian(
+          x=x, model=model,
+        )
+
+    # Compute the posterior
+    sampler = DiagLaplace(backend="nnj")
+
+    for x, y in test_loader:
+
+        # get predictive distribution
+        pred_mu, pred_sigma = sampler.laplace(
+            x=x,
+            model=model,
+            hessian=hessian,
+            prior_precision=1.0,
+            scale=1.0,
+            num_samples=100,
+        )
 
 
 Links:
