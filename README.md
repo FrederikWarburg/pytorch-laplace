@@ -83,7 +83,7 @@ network_nnj = nnj.utils.convert_to_nnj(
 ```
 
 ## BibTeX
-If you want to cite the framework feel free to use this (but only if you loved it 😊):
+If you want to cite the framework:
 
 ```bibtex
 @article{software:pytorch-laplace,
