@@ -81,3 +81,15 @@ network_nnj = nnj.utils.convert_to_nnj(
          num_samples=100,
      )
 ```
+
+## BibTeX
+If you want to cite the framework feel free to use this (but only if you loved it 😊):
+
+```bibtex
+@article{software:pytorch-laplace,
+  title={StochMan},
+  author={Frederik Warburg and Marco Miani},
+  journal={GitHub. Note: [https://github.com/FrederikWarburg/pytorch-laplace](https://github.com/FrederikWarburg/pytorch-laplace)},
+  year={2021}
+}
+```
