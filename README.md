@@ -89,7 +89,7 @@ If you want to cite the framework:
 @article{software:pytorch-laplace,
   title={Pytorch-laplace},
   author={Frederik Warburg and Marco Miani},
-  journal={GitHub. Note: [https://github.com/FrederikWarburg/pytorch-laplace](https://github.com/FrederikWarburg/pytorch-laplace)},
+  journal={GitHub. Note: https://github.com/FrederikWarburg/pytorch-laplace},
   year={2023}
 }
 ```
