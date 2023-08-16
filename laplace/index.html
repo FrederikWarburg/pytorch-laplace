@@ -1,0 +1,527 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" lang="en">
+<!--<![endif]-->
+
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Introduction &mdash; pytorch-laplace 0.0.0 documentation</title>
+  
+
+<!--   <link rel="shortcut icon" href="../_static/images/logo192.png" /> -->
+  
+  
+
+  
+
+  
+  
+  
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/readthedocs.css" type="text/css" />
+  <link rel="index" title="Index" href="../genindex.html" />
+  <link rel="search" title="Search" href="../search.html" />
+  <link rel="next" title="Hessian Estimators" href="../apis/hessian.html" />
+  <link rel="prev" title="Pytorch-laplace Documentation" href="../index.html" />
+  <!-- Google Analytics -->
+  <script type="text/javascript">
+    var collapsedSections = [];
+  </script>
+  
+  <!-- End Google Analytics -->
+  
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+  <script>
+    MathJax = {
+        chtml: {
+            scale: 1,
+            minScale: 1,
+        },
+        svg: {
+            scale: 1,
+            minScale: 1,
+        }
+    }
+</script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="../_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.2/css/all.css"
+    integrity="sha384-vSIIfh2YWi9wW0r9iZe7RJPrKwp6bG+s9QZMoITbCckVJqGCCRhc+ccxNcdpHuYu" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href=""
+        aria-label="LOGO"></a>
+
+      <div class="main-menu">
+        <ul>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+  </div>
+</div>
+
+<body class="pytorch-body">
+
+   
+
+  
+
+  <div class="table-of-contents-link-wrapper">
+    <span>Table of Contents</span>
+    <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+  </div>
+
+  <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+    <div class="pytorch-side-scroll">
+      <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <div class="pytorch-left-menu-search">
+          
+
+          
+          
+          
+          
+
+          
+
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        
+        
+        
+        
+        
+        <p class="caption" role="heading"><span class="caption-text">Learn about Laplace</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#intuition">Intuition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#derivations">Derivations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#hessian-approximations">Hessian approximations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#sampling-laplace">Sampling (Laplace)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#sampling-linearized-laplace">Sampling (Linearized Laplace)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#getting-started">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apis/hessian.html">Hessian Estimators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../apis/laplace.html">Laplace Samplers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../apis/optimization.html">Optimization</a></li>
+</ul>
+
+        
+        
+      </div>
+    </div>
+  </nav>
+
+  <div class="pytorch-container">
+    <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+      <div class="pytorch-breadcrumbs-wrapper">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="../index.html">
+            Docs
+        </a> &gt;
+      </li>
+
+        
+      <li>Introduction</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/laplace/index.rst.txt" rel="nofollow"><img src="../_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+      </div>
+
+      <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+        Shortcuts
+      </div>
+    </div>
+
+    <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+      <div class="pytorch-content-left">
+        
+          <div class="rst-content">
+            
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+                
+  <section id="introduction">
+<span id="id1"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading">¶</a></h1>
+<p>The Laplace approximation (McKay, 1992) is a method to quantify the uncertainty of a neural network.
+It assumes that the weights of a neural network follows a Gaussian distribution (Gaussian weight-posterior), which
+is estimated using the curvature of the loss landscape.
+In this document, we will explain the Laplace approximation and how to use it in the context of Bayesian neural networks.</p>
+</section>
+<section id="intuition">
+<h1>Intuition<a class="headerlink" href="#intuition" title="Permalink to this heading">¶</a></h1>
+<video autoplay="True" loop="True" muted="True" preload="auto" width="800"><source src="../_static/images/laplace-intuition.mp4" type="video/mp4">Laplace approximation intuition</video><p>The figure above shows the loss (or negative log likelihood) for two parameters in a neural network.
+After training, the parameters have converged to a local minimum of the loss, illustrated by the blue star <span class="math notranslate nohighlight">\(\theta^*\)</span>.
+If a parameter is in a steep valley, changing it a little bit will increase the loss a lot.
+This means that we are fairly certain about the specific value of the parameter. On the other hand,
+if a paramter is in a flat valley, changing it a little bit will not increase the loss a lot. Thus,
+we are uncertain about the specific value of the parameter.</p>
+<p>The steepness of the valley is determined by the second derivative of the loss, also called the Hessian.
+Thus, the inverse of the Hessian determines the uncertainty of the parameters. In the following,
+we will derive the Laplace approximation and show that it correspond to assuming a Gaussian distribution
+over the parameters (Gaussian weight-posterior).</p>
+</section>
+<section id="derivations">
+<h1>Derivations<a class="headerlink" href="#derivations" title="Permalink to this heading">¶</a></h1>
+<p>Laplace approximations (LA) can be applied for every
+loss function :math: <cite>mathcal{L}</cite> that can be interpreted as an unnormalized
+log-posterior by performing a second-order Taylor expansion around a chosen weight vector <span class="math notranslate nohighlight">\(\theta^*\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\log p(\boldsymbol{\theta} \mid \mathcal{D})=\mathcal{L}^*+\left(\boldsymbol{\theta}-\boldsymbol{\theta}^*\right)^{\top} \nabla \mathcal{L}^*+\frac{1}{2}\left(\boldsymbol{\theta}-\boldsymbol{\theta}^*\right)^{\top} \nabla^2 \mathcal{L}^*\left(\boldsymbol{\theta}-\boldsymbol{\theta}^*\right)+\mathcal{O}\left(\left\|\boldsymbol{\theta}-\boldsymbol{\theta}^*\right\|^3\right)\]</div>
+<p>Imposing the unnormalized log-posterior to be a second-order polynomial is equivalent to
+assuming the posterior to be Gaussian.</p>
+<p>If <span class="math notranslate nohighlight">\(\theta^*\)</span> is the maximum a posteriori (MAP) estimate, a common assumption is that the gradient is zero,
+such that the first-order term in the Taylor expansion vanishes, and the Taylor expansion simplifies to:</p>
+<div class="math notranslate nohighlight">
+\[\begin{aligned}
+\mathcal{L}(\theta) \approx &amp; \mathcal{L}^*+\frac{1}{2}\left(\theta-\theta^*\right)^{\top} \nabla^2 \mathcal{L}^*\left(\theta-\theta^*\right)
+\end{aligned}\]</div>
+<p>For common loss functions, such as the MSE and Cross-Entropy loss, the Hessian is positive definite,
+and thus, we can write the weight posterior as:</p>
+<div class="math notranslate nohighlight">
+\[\begin{aligned}
+p(\theta \mid \mathcal{D})=\mathcal{N}\left(\theta \mid \theta^*,\left(\nabla_\theta^2 \mathcal{L}_{\text {con }}\left(\theta^* ; \mathcal{D}\right)+\sigma_{\text {prior }}^{-2} \mathbb{I}\right)^{-1}\right)
+\end{aligned}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathcal{N}\)</span> denotes the Gaussian distribution.</p>
+</section>
+<section id="hessian-approximations">
+<h1>Hessian approximations<a class="headerlink" href="#hessian-approximations" title="Permalink to this heading">¶</a></h1>
+<p>The main challenge of the Laplace approximation is to compute the Hessian of
+the neural network with respect to the parameters <span class="math notranslate nohighlight">\(\nabla_\theta^2\)</span> and inverting this,
+as it is very computationally expensive. Therefore, there has been proposed several
+approximations to the Hessian. In the following, we will describe the most common.</p>
+<p>The Hessian is commonly approximiation with the <strong>Generalized Gauss-Newton</strong> approximation:</p>
+<div class="math notranslate nohighlight">
+\[\nabla_{\boldsymbol{\theta}^{(l)}}^2 \mathcal{L}\left(f_{\boldsymbol{\theta}}(\boldsymbol{x})\right) \approx J_{\boldsymbol{\theta}^{(l)}} f_{\boldsymbol{\theta}}(\boldsymbol{x})^{\top} \cdot \nabla_{\boldsymbol{\hat{y}}}^2 \mathcal{L}\left(\boldsymbol{\hat{y}}\right) \cdot J_{\boldsymbol{\theta}^{(l)}} f_{\boldsymbol{\theta}}(\boldsymbol{x}),\]</div>
+<p>for a single layer <span class="math notranslate nohighlight">\(l\)</span>, which neglects second order derivatives of <span class="math notranslate nohighlight">\(f\)</span> w.r.t. the parameters.
+Besides, the computational benefits of this approximations, the GGN also ensures that the Hessian is semi-positive definite.</p>
+<p>Another common approximation is the <strong>diagonal</strong> approximation, which is the diagonal of the Hessian.
+This ensures that the models scales linearly with the number of parameters, rather than quadratically.</p>
+<p>There exists several pytorch backends that supports, efficient computation of the Hessian, such as</p>
+<ul class="simple">
+<li><p>NNJ (efficiently implements jacobian-vector and jacobina-matrix products)</p></li>
+<li><p>Backpack (extends pytorch autograd with (approximate) second order derivatives)</p></li>
+<li><p>ASDL (similar to Backpack)</p></li>
+</ul>
+<p>This repo supports all backends, but focuses on the NNJ, because it is an order of magnitude faster and more memory efficient
+than the other backends. NNJ does not replies on autograd, but instead uses a custom PyTorch jacobian-vector products,
+which are more efficient for approximate second-order methods. Furthermore, NNJ allows to scale the laplace approximation
+to large neural networks with large input, which is not possible with the other backends. NNJ also allows to compute linearized laplace
+without relying on samples (single forward pass). The main disadvantage of NNJ is that it requires the user to implement jacobian of layers.</p>
+<p>We can get the hessian of the loss w.r.t. the parameters as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define data loader</span>
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">()</span>
+
+<span class="c1"># define model (convert torch.Sequential to nnj.Sequential)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">nnj</span><span class="o">.</span><span class="n">convert_to_nnj</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># define HessianCalculator</span>
+<span class="c1"># this class assumes you are using MSE loss</span>
+<span class="c1"># to train your network.</span>
+<span class="n">hessian_calculator</span> <span class="o">=</span> <span class="n">nnj</span><span class="o">.</span><span class="n">MSEHessianCalculator</span><span class="p">(</span>
+  <span class="n">hessian_shape</span><span class="o">=</span><span class="s2">&quot;diag&quot;</span><span class="p">,</span> <span class="c1"># uses a diagonal approximation of the GGN</span>
+  <span class="n">approximation_accuracy</span><span class="o">=</span><span class="s2">&quot;exact&quot;</span><span class="p">,</span> <span class="c1"># alternatively choose &quot;approx&quot;, which scales linearly with the output dimension, rather than quadratically</span>
+<span class="p">)</span>
+
+<span class="c1"># initialize hessian</span>
+<span class="n">hessian</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+    <span class="c1"># compute hessian approximation</span>
+    <span class="n">hessian</span> <span class="o">+=</span> <span class="n">hessian_calculator</span><span class="o">.</span><span class="n">compute_hessian</span><span class="p">(</span>
+      <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="sampling-laplace">
+<h1>Sampling (Laplace)<a class="headerlink" href="#sampling-laplace" title="Permalink to this heading">¶</a></h1>
+<p>Once, we have a weight-posterior (a distribution of weights), we can sample from it to obtain a distribution of predictions.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+p(y \mid \boldsymbol{x}, \mathcal{D}) &amp;=\int p(y \mid \boldsymbol{x}, \boldsymbol{\theta}) p(\boldsymbol{\theta} \mid \mathcal{D}) d \boldsymbol{\theta} \\
+&amp; \approx \frac{1}{K} \sum_{k=1}^{K} p(y \mid \boldsymbol{x}, \boldsymbol{\theta}^{(k)}), \quad \boldsymbol{\theta}^{(k)} \sim p(\boldsymbol{\theta} \mid \mathcal{D})
+\end{aligned}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(K\)</span> is the number of samples. In code, this can be implemented as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define dataloader</span>
+<span class="n">test_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">()</span>
+
+<span class="c1"># Compute the posterior</span>
+<span class="n">sampler</span> <span class="o">=</span> <span class="n">DiagLaplace</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;nnj&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="p">:</span>
+
+    <span class="c1"># get predictive distribution</span>
+    <span class="n">pred_mu</span><span class="p">,</span> <span class="n">pred_sigma</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">laplace</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">hessian</span><span class="o">=</span><span class="n">hessian</span><span class="p">,</span>
+        <span class="n">prior_precision</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">num_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="sampling-linearized-laplace">
+<h1>Sampling (Linearized Laplace)<a class="headerlink" href="#sampling-linearized-laplace" title="Permalink to this heading">¶</a></h1>
+<p>The Linerzied Laplace allows you to get the distribution of your predictions <strong>without sampling!</strong>.</p>
+<div class="math notranslate nohighlight">
+\[add math\]</div>
+<p>In code, we provide the high level API:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define dataloader</span>
+<span class="n">test_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">()</span>
+
+<span class="c1"># Compute the posterior</span>
+<span class="n">sampler</span> <span class="o">=</span> <span class="n">DiagLaplace</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;nnj&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="p">:</span>
+
+    <span class="c1"># get predictive distribution</span>
+    <span class="n">pred_mu</span><span class="p">,</span> <span class="n">pred_sigma</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">linearized_laplace</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">hessian</span><span class="o">=</span><span class="n">hessian</span><span class="p">,</span>
+        <span class="n">prior_precision</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h1>
+<p>We provide several simple examples for you to get started with the library.
+Please see the example folder, where we provide examples for toy problems, such as:</p>
+<ul class="simple">
+<li><p>Laplace and Linearized Laplace for sinousoidal regression</p></li>
+<li><p>Laplace and Linearized Laplace for MNIST classification</p></li>
+</ul>
+<p>And implement state of the art methods such as:</p>
+<ul class="simple">
+<li><p>Laplacian Autoencoders for Learning Stochastic Representations</p></li>
+<li><p>Bayesian Metric Learning for Uncertainty Quantification in Image Retrieval</p></li>
+<li><p>Laplacian Segmentation Networks: Improved Epistemic Uncertainty from Spatial Aleatoric Uncertainty</p></li>
+</ul>
+</section>
+
+
+              </article>
+              
+            </div>
+            <footer>
+  
+  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+    
+    <a href="../apis/hessian.html" class="btn btn-neutral float-right" title="Hessian Estimators" accesskey="n"
+      rel="next">Next <img src="../_static/images/chevron-right-blue.svg"
+        class="next-page"></a>
+    
+    
+    <a href="../index.html" class="btn btn-neutral" title="Pytorch-laplace Documentation" accesskey="p"
+      rel="prev"><img src="../_static/images/chevron-right-blue.svg" class="previous-page"> Previous</a>
+    
+  </div>
+  
+
+  <hr>
+
+  <div role="contentinfo">
+    <p>
+      &copy; Copyright 2023, Frederik Warburg and Marco Miani.
+
+    </p>
+  </div>
+  
+  <div>
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a
+      href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the
+      Docs</a>.
+  </div>
+   
+
+</footer>
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Introduction</a></li>
+<li><a class="reference internal" href="#intuition">Intuition</a></li>
+<li><a class="reference internal" href="#derivations">Derivations</a></li>
+<li><a class="reference internal" href="#hessian-approximations">Hessian approximations</a></li>
+<li><a class="reference internal" href="#sampling-laplace">Sampling (Laplace)</a></li>
+<li><a class="reference internal" href="#sampling-linearized-laplace">Sampling (Linearized Laplace)</a></li>
+<li><a class="reference internal" href="#getting-started">Getting Started</a></li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+    </section>
+  </div>
+
+  <!-- 
+ -->
+
+  
+
+  
+  <script type="text/javascript" id="documentation_options" data-url_root="../"
+    src="../_static/documentation_options.js"></script>
+  <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+  <script src="../_static/jquery.js"></script>
+  <script src="../_static/underscore.js"></script>
+  <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+  <script src="../_static/doctools.js"></script>
+  <script src="../_static/sphinx_highlight.js"></script>
+  <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  
+
+  
+
+  <script type="text/javascript" src="../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+    jQuery(function () {
+      SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <div class="container-fluid docs-tutorials-resources" id="docs-tutorials-resources">
+  </div>
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="" aria-label="LOGO"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="../_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function () {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function (e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+
+</html>
