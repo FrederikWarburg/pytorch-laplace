@@ -90,6 +90,6 @@ If you want to cite the framework:
   title={Pytorch-laplace},
   author={Frederik Warburg and Marco Miani},
   journal={GitHub. Note: [https://github.com/FrederikWarburg/pytorch-laplace](https://github.com/FrederikWarburg/pytorch-laplace)},
-  year={2021}
+  year={2023}
 }
 ```
