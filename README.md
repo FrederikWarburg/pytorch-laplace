@@ -87,7 +87,7 @@ If you want to cite the framework feel free to use this (but only if you loved i
 
 ```bibtex
 @article{software:pytorch-laplace,
-  title={StochMan},
+  title={Pytorch-laplace},
   author={Frederik Warburg and Marco Miani},
   journal={GitHub. Note: [https://github.com/FrederikWarburg/pytorch-laplace](https://github.com/FrederikWarburg/pytorch-laplace)},
   year={2021}
